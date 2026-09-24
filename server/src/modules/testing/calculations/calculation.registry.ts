@@ -1,0 +1,213 @@
+import { R76RuleDefinition } from './calculation.types.js';
+
+export const R76_RULES: Record<string, R76RuleDefinition> = {
+  'R76-3.4.2': {
+    ruleId: 'R76-3.4.2',
+    regulation: 'OIML R 76-1',
+    edition: '2006',
+    clause: '3.4.2',
+    title: 'Scale Interval Ratio (d and e relationship)',
+    ruleType: 'VALIDATION',
+    formulaDescription: 'd < e <= 10d (with Class I exception where d < 1mg permitted with e = 1mg)',
+    applicability: { all_instruments: true },
+    isImplemented: true
+  },
+  'R76-3.5.1-T6': {
+    ruleId: 'R76-3.5.1-T6',
+    regulation: 'OIML R 76-1',
+    edition: '2006',
+    clause: '3.5.1',
+    title: 'Maximum Permissible Errors on Initial Verification',
+    ruleType: 'MPE',
+    formulaDescription: 'Table 6: Class I/II/III/IIII zones: +/-0.5e, +/-1.0e, +/-1.5e',
+    applicability: { modes: ['TYPE_EVALUATION', 'INITIAL_VERIFICATION', 'SUBSEQUENT_VERIFICATION'] },
+    isImplemented: true
+  },
+  'R76-3.5.2': {
+    ruleId: 'R76-3.5.2',
+    regulation: 'OIML R 76-1',
+    edition: '2006',
+    clause: '3.5.2',
+    title: 'Maximum Permissible Errors in Service',
+    ruleType: 'MPE',
+    formulaDescription: 'MPE_service = 2 * MPE_initial',
+    applicability: { modes: ['SERVICE_INSPECTION'] },
+    isImplemented: true
+  },
+  'R76-A.4.4.3': {
+    ruleId: 'R76-A.4.4.3',
+    regulation: 'OIML R 76-1',
+    edition: '2006',
+    clause: '3.5.1',
+    annexClause: 'A.4.4.3',
+    title: 'Error of Indication (Changeover-point method)',
+    ruleType: 'ERROR',
+    formulaDescription: 'P = I + 0.5e - dL; E = P - L; Ec = E - E0; |Ec| <= MPE',
+    applicability: { indication_type: 'digital' },
+    isImplemented: true
+  },
+  'R76-3.6.1-A.4.10': {
+    ruleId: 'R76-3.6.1-A.4.10',
+    regulation: 'OIML R 76-1',
+    edition: '2006',
+    clause: '3.6.1',
+    annexClause: 'A.4.10',
+    title: 'Repeatability Test',
+    ruleType: 'REPEATABILITY',
+    formulaDescription: 'Delta_I = I_max - I_min <= |MPE(load)|. Type evaluation: 10 readings at ~50% Max and ~100% Max for Max < 1000kg.',
+    applicability: { all_instruments: true },
+    isImplemented: true
+  },
+  'R76-3.6.2.1-A.4.7': {
+    ruleId: 'R76-3.6.2.1-A.4.7',
+    regulation: 'OIML R 76-1',
+    edition: '2006',
+    clause: '3.6.2.1',
+    annexClause: 'A.4.7',
+    title: 'Eccentric Loading - General Receptors (<= 4 points of support)',
+    ruleType: 'ECCENTRICITY',
+    formulaDescription: 'Test load = 1/3 * (Max + Additive_Tare); Load applied at 4 quarter segments; |Ec| <= MPE',
+    applicability: { support_points: '<=4' },
+    isImplemented: true
+  },
+  'R76-3.6.2.2': {
+    ruleId: 'R76-3.6.2.2',
+    regulation: 'OIML R 76-1',
+    edition: '2006',
+    clause: '3.6.2.2',
+    annexClause: 'A.4.7',
+    title: 'Eccentric Loading - More than 4 points of support',
+    ruleType: 'ECCENTRICITY',
+    formulaDescription: 'Test load = 1/(n-1) * (Max + Additive_Tare); Load applied successively over each support point',
+    applicability: { support_points: '>4' },
+    isImplemented: true
+  },
+  'R76-3.6.2.3': {
+    ruleId: 'R76-3.6.2.3',
+    regulation: 'OIML R 76-1',
+    edition: '2006',
+    clause: '3.6.2.3',
+    annexClause: 'A.4.7',
+    title: 'Eccentric Loading - Receptors with minimal off-centre loading (Tanks/Hoppers)',
+    ruleType: 'ECCENTRICITY',
+    formulaDescription: 'Test load = 1/10 * (Max + Additive_Tare); Load applied over each support point',
+    applicability: { receptor_type: ['tank', 'hopper'] },
+    isImplemented: true
+  },
+  'R76-3.6.2.4': {
+    ruleId: 'R76-3.6.2.4',
+    regulation: 'OIML R 76-1',
+    edition: '2006',
+    clause: '3.6.2.4',
+    annexClause: 'A.4.7',
+    title: 'Eccentric Loading - Rolling-load Instruments',
+    ruleType: 'ECCENTRICITY',
+    formulaDescription: 'Test load = heaviest concentrated rolling load, not exceeding 0.8 * (Max + Additive_Tare); Positions: beginning, middle, end',
+    applicability: { rolling_load: true },
+    isImplemented: true
+  },
+  'R76-3.8-DIGITAL': {
+    ruleId: 'R76-3.8-DIGITAL',
+    regulation: 'OIML R 76-1',
+    edition: '2006',
+    clause: '3.8',
+    annexClause: 'A.4.8',
+    title: 'Discrimination Test (Digital indication, d >= 5mg)',
+    ruleType: 'DISCRIMINATION',
+    formulaDescription: 'Additional load = 1.4d placed gently on receptor must produce unambiguous change of indication',
+    applicability: { indication_type: 'digital', d_min_mg: 5 },
+    isImplemented: true
+  },
+  'R76-3.8-ANALOG': {
+    ruleId: 'R76-3.8-ANALOG',
+    regulation: 'OIML R 76-1',
+    edition: '2006',
+    clause: '3.8',
+    annexClause: 'A.4.8',
+    title: 'Discrimination Test (Analog / Semi-self indicating)',
+    ruleType: 'DISCRIMINATION',
+    formulaDescription: 'Additional load = 1.0 * MPE (min 1mg) must produce permanent visible displacement',
+    applicability: { indication_type: 'analog' },
+    isImplemented: true
+  },
+  'R76-3.8-NON-SELF': {
+    ruleId: 'R76-3.8-NON-SELF',
+    regulation: 'OIML R 76-1',
+    edition: '2006',
+    clause: '3.8',
+    annexClause: 'A.4.8',
+    title: 'Discrimination Test (Non-self indicating)',
+    ruleType: 'DISCRIMINATION',
+    formulaDescription: 'Additional load = 0.4 * MPE (min 1mg) must produce visible displacement',
+    applicability: { indication_type: 'non_self' },
+    isImplemented: true
+  },
+  'R76-4.5.2-A.4.2.3': {
+    ruleId: 'R76-4.5.2-A.4.2.3',
+    regulation: 'OIML R 76-1',
+    edition: '2006',
+    clause: '4.5.2',
+    annexClause: 'A.4.2.3',
+    title: 'Accuracy of Zero-Setting',
+    ruleType: 'ZERO_SETTING',
+    formulaDescription: 'Zero-setting error |E0| <= 0.25e (or 0.5d where d < e)',
+    applicability: { has_zero_setting: true },
+    isImplemented: true
+  },
+  'R76-4.6.1': {
+    ruleId: 'R76-4.6.1',
+    regulation: 'OIML R 76-1',
+    edition: '2006',
+    clause: '4.6.1',
+    annexClause: 'A.4.6',
+    title: 'Tare Balancing and Tare Weighing Test',
+    ruleType: 'TARE',
+    formulaDescription: 'Tare weighing accuracy: net indication errors evaluated against MPE for net load',
+    applicability: { has_tare: true },
+    isImplemented: false // PARTIAL / REVIEW_REQUIRED
+  },
+  'R76-3.6.3': {
+    ruleId: 'R76-3.6.3',
+    regulation: 'OIML R 76-1',
+    edition: '2006',
+    clause: '3.6.3',
+    title: 'Multiple Indicating Devices Consistency',
+    ruleType: 'MULTIPLE_INDICATIONS',
+    formulaDescription: 'Difference between indications on different devices <= |MPE|; Difference between digital display and printer = 0',
+    applicability: { multiple_indicators: true },
+    isImplemented: true
+  },
+  'R76-3.6.4': {
+    ruleId: 'R76-3.6.4',
+    regulation: 'OIML R 76-1',
+    edition: '2006',
+    clause: '3.6.4',
+    title: 'Different Positions of Equilibrium',
+    ruleType: 'EQUILIBRIUM_POSITIONS',
+    formulaDescription: 'Difference between two results for the same load <= |MPE|',
+    applicability: { equilibrium_device: true },
+    isImplemented: true
+  },
+  'R76-3.7.1-ERROR': {
+    ruleId: 'R76-3.7.1-ERROR',
+    regulation: 'OIML R 76-1',
+    edition: '2006',
+    clause: '3.7.1',
+    title: 'Reference Standard Suitability - Standard Weight Maximum Error',
+    ruleType: 'STANDARD_ERROR',
+    formulaDescription: 'Maximum permissible error of standard weights <= 1/3 * MPE(load)',
+    applicability: { uses_standard_weights: true },
+    isImplemented: true
+  },
+  'R76-3.7.1-UNCERTAINTY': {
+    ruleId: 'R76-3.7.1-UNCERTAINTY',
+    regulation: 'OIML R 76-1',
+    edition: '2006',
+    clause: '3.7.1',
+    title: 'Reference Standard Suitability - Measurement Uncertainty & Traceability',
+    ruleType: 'STANDARD_UNCERTAINTY',
+    formulaDescription: 'Calibration certificate validity and expanded uncertainty verification',
+    applicability: { uses_standard_weights: true },
+    isImplemented: true
+  }
+};
