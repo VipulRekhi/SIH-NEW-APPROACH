@@ -1,221 +1,256 @@
 # NAWI Test Report Generation System (OIML R-76)
 
-**Smart India Hackathon (SIH 2026)**  
-**Problem Statement ID**: 26035  
-**Title**: Development of a Software Program/Application for Generation of Test Reports for Non-Automatic Weighing Instruments (NAWI) as per OIML Recommendation R-76  
-**Current Status**: **Phase 2: Instrument Management + OCR (Completed)**
+[![Smart India Hackathon 2026](https://img.shields.io/badge/SIH-2026-blue.svg)](https://www.sih.gov.in/)
+[![Problem Statement](https://img.shields.io/badge/PS--ID-26035-orange.svg)](#)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.7+-blue.svg)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/React-19-61dafb.svg)](https://react.dev/)
+[![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-14+-336791.svg)](https://www.postgresql.org/)
+
+**Smart India Hackathon (SIH 2026) | Problem Statement ID: 26035**  
+**Title**: Development of a Software Program / Application for Generation of Test Reports for Non-Automatic Weighing Instruments (NAWI) as per OIML Recommendation R-76  
 
 ---
 
-## 1. Problem Summary
+## 🤖 Antigravity AI Setup Prompt (For Teammates)
 
-Non-Automatic Weighing Instruments (NAWI) used across legal metrology, trade, pharmaceuticals, and manufacturing require stringent verification and test reporting as per international recommendation **OIML R-76**.
+If you are a teammate opening this repository inside the **Antigravity IDE / Agent**, copy and paste the prompt below directly into your Antigravity chat. The agent will inspect your local environment, install dependencies, guide you through setting your local database credentials, run migrations, and launch the application.
 
-Presently, many verification laboratories and legal metrology officers face:
-1. Manual recording prone to mathematical calculation errors in evaluating Maximum Permissible Error (MPE).
-2. Labor-intensive test report preparation.
-3. Lack of unified tamper-evident verification (digital QR signatures).
-4. Difficulty in digitizing instrument specifications directly from equipment nameplates.
-
-This project delivers a **deployment-ready, fully local application** to digitize instrument intake via OCR, automatically execute OIML R-76 calculations (performance, repeatability, eccentricity, tare), and generate tamper-evident official test certificates.
-
----
-
-## 2. 6-Phase Implementation Roadmap
-
-- **Phase 1: Foundation & Authentication** *(Completed)*  
-  Local PostgreSQL, Node/Express JWT backend, RBAC, React + Tailwind laboratory UI shell.
-- **Phase 2: Instrument + OCR** *(Completed)*  
-  Instrument domain, offline Tesseract.js OCR, side-by-side human verification studio, document gallery, and laboratory isolation.
-- **Phase 3: R-76 Testing & Calculation Engine** *(UPCOMING)*  
-  Weighing accuracy, repeatability, eccentricity, tare, and automated MPE limits.
-- **Phase 4: Report Generation + QR**  
-  Standardized OIML R-76 PDF generation and cryptographic verification QR codes.
-- **Phase 5: Dashboard & Repository**  
-  Laboratory archive, audit trails, and multi-laboratory management.
-- **Phase 6: Integration, Security & SIH Polish**  
-  Final hardening, performance optimization, and demonstration polish.
+> [!TIP]
+> ### 📋 Copy-Paste Prompt for Antigravity Agent
+> ```text
+> Please set up and run the NAWI Test Report Generation System on my machine by executing the following steps:
+> 
+> 1. Check that my system has Node.js (v18+) and that local PostgreSQL is running on my machine.
+> 2. Install all dependencies across the workspace:
+>    - Root directory (`npm install`)
+>    - Backend directory (`cd server && npm install`)
+>    - Frontend directory (`cd client && npm install`)
+> 3. Configure environment files:
+>    - If `client/.env` does not exist, copy it from `client/.env.example` (API base URL: http://localhost:5000/api).
+>    - If `server/.env` does not exist, copy it from `server/.env.example`.
+>    - Check my local PostgreSQL credentials (username, password, host, and port). Ask me for my local PostgreSQL password/username if you cannot determine it or need confirmation, and set DATABASE_URL accordingly in `server/.env` (format: postgresql://<USER>:<PASSWORD>@localhost:5432/nawi_r76). Generate a random string for JWT_SECRET if needed.
+> 4. Initialize and migrate the database:
+>    - Run `npm run migrate` from the root directory to verify connectivity, auto-create the `nawi_r76` database, and execute all migrations in `server/migrations/`.
+>    - Run `npm run seed:admin` from root to seed the initial system administrator.
+> 5. Launch the application:
+>    - Run `npm run dev` to start both the Express backend (port 5000) and Vite React frontend (port 5173) concurrently.
+> 6. Verify that the health endpoint (http://localhost:5000/api/health) returns 200 OK and summarize the access URLs and default admin credentials for me.
+> ```
 
 ---
 
-## 3. Technology Stack
+## 📖 Table of Contents
+1. [Problem Statement & Overview](#-problem-statement--overview)
+2. [Technology Stack](#-technology-stack)
+3. [Architecture Overview](#-architecture-overview)
+4. [Prerequisites](#-prerequisites)
+5. [Manual Installation & Setup](#-manual-installation--setup)
+6. [Database Setup & Migrations](#-database-setup--migrations)
+7. [Running the Application](#-running-the-application)
+8. [Testing & Verification](#-testing--verification)
+9. [Default Credentials](#-default-credentials)
+10. [Repository Structure](#-repository-structure)
+11. [Security Best Practices](#-security-best-practices)
+
+---
+
+## 🎯 Problem Statement & Overview
+
+Verification and testing of Non-Automatic Weighing Instruments (NAWI) in accordance with the international metrological standard **OIML Recommendation R-76** is a critical function for legal metrology departments, calibration laboratories, pharmaceuticals, and manufacturing sectors.
+
+### Key Challenges Addressed
+- **Elimination of Human Calculation Errors**: Automated evaluation of Maximum Permissible Error (MPE), repeatability spread, eccentricity deviation, and tare influence.
+- **Instrument Intake Digitization**: Integrated offline OCR engine to extract nameplate parameters (Class, $Max$, $Min$, $e$, $d$) directly from instrument images.
+- **Regulatory Compliance**: Strictly structured according to OIML R-76 test procedures and accuracy classes (Class I, II, III, IIII).
+- **Tamper-Evident Reporting**: Standardized test report generation with digital cryptographic verification QR codes.
+- **Zero Cloud Lock-in**: Fully functional on local offline infrastructure with local PostgreSQL storage.
+
+---
+
+## 🛠 Technology Stack
 
 ### Frontend (`client/`)
 - **Framework**: React 19 + TypeScript
-- **Bundler**: Vite
-- **Styling**: Tailwind CSS (Tailored legal metrology / enterprise laboratory aesthetic)
+- **Bundler / Dev Server**: Vite
+- **Styling**: Tailwind CSS (Enterprise Legal Metrology UI Theme)
 - **Routing**: React Router DOM v7
-- **HTTP Client**: Axios with request/response interceptors for JWT
+- **HTTP Client**: Axios (configured with JWT Bearer interceptors)
 - **Icons**: Lucide React
 
 ### Backend (`server/`)
-- **Runtime**: Node.js v24+
-- **Framework**: Express 4 with TypeScript
-- **Security**: Helmet, CORS (locked to client origin), Express Rate Limit
-- **Validation**: Zod schema validation
-- **Authentication**: JWT (`jsonwebtoken`) & `bcryptjs` (work factor 12)
+- **Runtime**: Node.js v18+ (Node 22 / 24 compatible)
+- **Framework**: Express 4 with TypeScript (`tsx` runtime)
 - **Database Driver**: `pg` (PostgreSQL connection pool with parameterized queries)
+- **Data Validation**: Zod schemas
+- **Authentication**: JWT (`jsonwebtoken`) + Salted Bcrypt (`bcryptjs`, work factor 12)
+- **Security Middleware**: Helmet, CORS, Express Rate Limit
+- **OCR Engine**: Tesseract.js + Sharp image processor
 
 ### Database
-- **Engine**: Local PostgreSQL 18+ (No cloud services, No Supabase, No Firebase)
-- **Migrations**: Automated SQL migration runner (`server/migrations/`)
+- **Engine**: Local PostgreSQL 14+ (tested on PostgreSQL 16, 17, 18)
+- **No Cloud Dependencies**: Works entirely offline on `localhost`.
 
 ---
 
-## 4. Architecture Overview
+## 🏛 Architecture Overview
 
+```text
+ ┌───────────────────────────┐         ┌───────────────────────────┐
+ │   React 19 + TypeScript   │  HTTP   │     Express 4 REST API    │
+ │       (Vite Client)       │ ◄─────► │     (TypeScript Server)   │
+ │   http://localhost:5173   │  (JWT)  │    http://localhost:5000  │
+ └───────────────────────────┘         └─────────────┬─────────────┘
+                                                     │ Parameterized SQL
+                                                     ▼
+                                       ┌───────────────────────────┐
+                                       │      PostgreSQL (Local)   │
+                                       │   localhost:5432/nawi_r76 │
+                                       └───────────────────────────┘
 ```
- [ React + TypeScript (Vite) ]  <--->  [ Express API Server ]  <--->  [ Local PostgreSQL 18 ]
-    http://localhost:5173                   http://localhost:5000         localhost:5432 (nawi_r76)
-```
-
-1. **Strictly Local**: Designed from the ground up to operate completely on local infrastructure without cloud dependencies.
-2. **True Security Boundary**: Backend authorization middleware (`authenticateToken`, `authorizeRoles`) acts as the security boundary.
-3. **No Premature Schemas**: Only foundational authentication tables (`roles`, `laboratories`, `users`) are introduced in Phase 1. Instruments and test observations are deferred to Phases 2 and 3.
 
 ---
 
-## 5. Prerequisites
+## 📋 Prerequisites
 
-Before running the application, ensure the following are installed locally:
-- **Node.js**: v18.0.0 or higher (v24+ recommended)
-- **npm**: v9.0.0 or higher
-- **PostgreSQL**: Version 14 or higher running locally on port `5432`
+Before setting up the project, ensure you have the following installed on your machine:
+
+1. **Node.js**: `v18.0.0` or higher ([Download Node.js](https://nodejs.org/))
+2. **npm**: `v9.0.0` or higher (bundled with Node.js)
+3. **PostgreSQL**: `v14.0` or higher installed and running as a local service on port `5432` ([Download PostgreSQL](https://www.postgresql.org/download/))
+4. **Git**: Installed and configured on your system
 
 ---
 
-## 6. Local Setup & Installation
+## 💻 Manual Installation & Setup
 
-### Step 1: Clone and Install Dependencies
+If you prefer setting up the repository manually without the AI prompt:
 
+### Step 1: Clone the Repository
 ```bash
-# Clone the repository
 git clone https://github.com/VipulRekhi/SIH-NEW-APPROACH.git
 cd SIH-NEW-APPROACH
+```
 
-# Install root dependencies
+### Step 2: Install Dependencies
+Install dependencies for the root orchestrator, backend server, and frontend client:
+
+```bash
+# 1. Install root workspace packages
 npm install
 
-# Install server dependencies
+# 2. Install backend packages
 cd server
 npm install
 
-# Install client dependencies
+# 3. Install frontend packages
 cd ../client
 npm install
 
-# Return to root
+# 4. Return to project root
 cd ..
 ```
 
-### Step 2: Configure Environment Variables
+### Step 3: Configure Environment Variables
 
-**Server Environment (`server/.env`):**
-Create `server/.env` based on `server/.env.example`:
+#### 1. Backend Configuration (`server/.env`)
+Create `server/.env` by copying the template file:
+```bash
+# On Windows (PowerShell):
+Copy-Item server/.env.example server/.env
 
+# On Linux / macOS:
+cp server/.env.example server/.env
+```
+
+Open `server/.env` and update the `DATABASE_URL` with **your local PostgreSQL credentials**:
 ```env
 PORT=5000
 NODE_ENV=development
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/nawi_r76
+
+# Configure with YOUR local PostgreSQL user and password:
+DATABASE_URL=postgresql://<YOUR_POSTGRES_USER>:<YOUR_POSTGRES_PASSWORD>@localhost:5432/nawi_r76
+
 JWT_SECRET=super_secret_local_dev_key_sih_2026_nawi_r76_oiml_test_report
 JWT_EXPIRES_IN=7d
 CLIENT_URL=http://localhost:5173
 ```
-*(Replace `postgres:postgres` with your local PostgreSQL username and password).*
 
-**Client Environment (`client/.env`):**
-Create `client/.env` based on `client/.env.example`:
+#### 2. Frontend Configuration (`client/.env`)
+Create `client/.env` by copying the template file:
+```bash
+# On Windows (PowerShell):
+Copy-Item client/.env.example client/.env
 
+# On Linux / macOS:
+cp client/.env.example client/.env
+```
+
+Verify that `client/.env` contains:
 ```env
 VITE_API_BASE_URL=http://localhost:5000/api
 ```
 
 ---
 
-## 7. Database Initialization & Migrations
+## 🗄 Database Setup & Migrations
 
-The project includes an automated database migration runner that automatically creates the `nawi_r76` database if it does not exist, enables `pgcrypto` extensions, creates tables, and seeds default roles.
+The repository includes an automated migration script that checks your PostgreSQL instance, creates the `nawi_r76` database if it does not already exist, and applies all SQL schema migrations in sequence.
+
+From the project root:
 
 ```bash
-# From workspace root:
-npm run migrate
-
-# Or directly from server directory:
-cd server
+# Run database migrations
 npm run migrate
 ```
 
-### Default Roles Seeded
-1. `admin` (System administrator)
-2. `officer` (Verification & review officer)
-3. `technician` (Test session operator / data entry)
-
-### Optional: Seed Initial Administrator Account
-To create an initial administrator account for testing:
+### Seed the Initial Admin Account
+Once migrations complete, seed the default system administrator account:
 
 ```bash
-# From workspace root:
 npm run seed:admin
 ```
-Default seeded credentials:
-- **Email**: `admin@nawi.gov.in`
-- **Password**: `Admin@123456`
 
 ---
 
-## 8. Running the Application
+## 🚀 Running the Application
 
-### Option A: Run Both Frontend and Backend Concurrently (Recommended)
-
-From the project root directory:
+### Option 1: Run Concurrently (Recommended)
+From the root directory, start both the backend API and frontend dev server in a single terminal:
 
 ```bash
 npm run dev
 ```
 
-This starts:
-- **Backend API**: `http://localhost:5000`
-- **Frontend Client**: `http://localhost:5173`
+- **Frontend Client**: [http://localhost:5173](http://localhost:5173)
+- **Backend API**: [http://localhost:5000](http://localhost:5000)
+- **Health Check**: [http://localhost:5000/api/health](http://localhost:5000/api/health)
 
-### Option B: Run Services Independently
+### Option 2: Run Services in Separate Terminals
 
-In Terminal 1 (Backend):
+**Terminal 1 (Backend):**
 ```bash
 npm run server
 ```
 
-In Terminal 2 (Frontend):
+**Terminal 2 (Frontend):**
 ```bash
 npm run client
 ```
 
 ---
 
-## 9. Verification & Testing
+## 🧪 Testing & Verification
 
-### Run Automated Backend Verification Tests
-The repository includes a comprehensive automated test script validating all Phase 1 authentication, authorization, and database constraints:
+### 1. Automated Backend API Tests
+Run the automated test suite to verify database connectivity, authentication, RBAC authorization, and API contracts:
 
 ```bash
-# From workspace root:
 npm run test:server
 ```
 
-**Tests Executed**:
-1. Health check: `GET /api/health`
-2. Technician registration: `POST /api/auth/register`
-3. Token issuance and password hash exclusion verification
-4. Duplicate email rejection (409 Conflict)
-5. Incorrect password rejection (401 Unauthorized)
-6. Correct credential login (200 OK + JWT)
-7. Session rehydration (`GET /api/auth/me`)
-8. Missing/invalid token rejection
-9. Stateless logout (`POST /api/auth/logout`)
-10. RBAC enforcement: Technician forbidden from admin-only routes (403 Forbidden)
-11. Phase 2 placeholder rejection (501 Not Implemented)
-
-### Production Build Test
-Verify both frontend and backend compile for production without errors:
+### 2. Production Build Verification
+Verify that both frontend and backend compile without errors:
 
 ```bash
 npm run build
@@ -223,79 +258,62 @@ npm run build
 
 ---
 
-## 10. API Specification (Phase 1)
+## 🔑 Default Credentials
 
-| Method | Endpoint | Access | Description |
+After running `npm run seed:admin`, the following credentials are ready to use:
+
+| Role | Email | Password | Access Level |
 | :--- | :--- | :--- | :--- |
-| `GET` | `/api/health` | Public | System and PostgreSQL connectivity status |
-| `POST` | `/api/auth/register` | Public | Registers a new Technician account |
-| `POST` | `/api/auth/login` | Public | Authenticates credentials and returns JWT |
-| `GET` | `/api/auth/me` | Authenticated | Retrieves active user profile and role |
-| `POST` | `/api/auth/logout` | Authenticated | Terminates client session |
-| `GET` | `/api/users` | Admin, Officer | Lists registered operators |
-| `GET` | `/api/laboratories`| Authenticated | Lists accredited testing laboratories |
-| `POST` | `/api/laboratories`| Admin | Registers a new testing laboratory |
-| `*` | `/api/instruments` | N/A | Reserved for Phase 2 (Returns 501) |
-| `*` | `/api/tests` | N/A | Reserved for Phase 3 (Returns 501) |
-| `*` | `/api/reports` | N/A | Reserved for Phase 4 (Returns 501) |
+| **System Admin** | `admin@nawi.gov.in` | `Admin@123456` | Full administrative control, user & lab management |
+| **Technician** | *(Self-register via UI)* | *(Custom)* | Intake instruments, run test sessions, data entry |
 
 ---
 
-## 11. Project Structure
+## 📁 Repository Structure
 
 ```text
 SIH-NEW-APPROACH/
-├── client/                     # React + Vite + TypeScript Frontend
-│   ├── public/
+├── client/                     # React 19 + TypeScript + Vite Frontend
 │   ├── src/
-│   │   ├── context/            # AuthContext.tsx (Session state & JWT sync)
-│   │   ├── layouts/            # AppLayout.tsx, AuthLayout.tsx
-│   │   ├── pages/              # LoginPage, RegisterPage, DashboardPage, PlaceholderPage
-│   │   ├── routes/             # AppRoutes.tsx, ProtectedRoute.tsx
-│   │   ├── services/           # api.ts (Axios client with Bearer interceptors)
-│   │   ├── types/              # index.ts (TypeScript interface declarations)
-│   │   ├── App.tsx             # Root application component
-│   │   ├── index.css           # Tailwind directives & laboratory styling
-│   │   └── main.tsx            # Entry point
-│   ├── .env.example
-│   ├── package.json
-│   ├── tailwind.config.js
-│   ├── tsconfig.json
-│   └── vite.config.ts
+│   │   ├── components/         # Reusable UI components & layouts
+│   │   ├── context/            # AuthContext (JWT session state)
+│   │   ├── pages/              # Application pages & verification studios
+│   │   ├── services/           # Axios API client & interceptors
+│   │   └── types/              # Metrology & domain TypeScript interfaces
+│   ├── .env.example            # Client environment template
+│   └── package.json
 │
-├── server/                     # Node.js + Express + TypeScript Backend
-│   ├── migrations/             # Reproducible SQL schema & role seeds
+├── server/                     # Express + TypeScript Backend
+│   ├── migrations/             # SQL schema migrations (001 - 006)
 │   │   ├── 001_initial_schema.sql
-│   │   └── 002_seed_roles.sql
+│   │   ├── 002_seed_roles.sql
+│   │   ├── 003_instrument_domain.sql
+│   │   ├── 004_seed_demo_data.sql
+│   │   ├── 005_test_sessions_and_calculations.sql
+│   │   └── 006_test_applicability_and_state_model.sql
 │   ├── src/
-│   │   ├── config/             # db.ts (pg pool), env.ts
-│   │   ├── controllers/        # auth, user, laboratory controllers
-│   │   ├── middleware/         # auth, role, validate, error handlers
-│   │   ├── repositories/       # user, role, laboratory parameterized queries
-│   │   ├── routes/             # auth, user, laboratory routes
-│   │   ├── scripts/            # migrate.ts, seed-admin.ts, test-api.ts
-│   │   ├── services/           # auth, user, laboratory business logic
-│   │   ├── types/              # index.ts
-│   │   ├── utils/              # jwt.ts, password.ts
-│   │   └── server.ts           # Main Express server bootstrap
-│   ├── .env.example
-│   ├── package.json
-│   └── tsconfig.json
+│   │   ├── config/             # Database pool & environment loader
+│   │   ├── controllers/        # Route controllers
+│   │   ├── middleware/         # Auth, validation, error handling
+│   │   ├── modules/            # OCR & OIML R-76 calculation engines
+│   │   ├── repositories/       # Parameterized SQL database queries
+│   │   ├── routes/             # Express API route definitions
+│   │   ├── scripts/            # Migration, seeding, and verification scripts
+│   │   └── server.ts           # Express server entry point
+│   ├── .env.example            # Server environment template
+│   └── package.json
 │
-├── docs/
-│   └── architecture.md         # Detailed architecture, ERD, and roadmap specs
-├── .gitignore
-├── README.md
-└── package.json                # Root orchestration manifest
+├── docs/                       # Architecture diagrams & documentation
+├── package.json                # Root orchestration scripts
+└── README.md                   # Project documentation & teammate guide
 ```
 
 ---
 
-## 12. Security Specifications
+## 🛡 Security Best Practices
 
-- **Password Hashing**: Salted `bcryptjs` with cost factor 12. Plaintext passwords never stored or logged.
-- **Injection Prevention**: All SQL statements use parameterized bindings ($1, $2) via `pg`.
-- **Role Isolation**: Public registration endpoint assigns strictly `technician`. Admin accounts must be seeded or provisioned.
-- **Sanitized Outputs**: `password_hash` is explicitly excluded from all responses and repository SafeUser queries.
-- **HTTP Hardening**: `helmet` headers, origin-restricted `cors`, and route-specific rate limiting on authentication attempts.
-- **Environment Isolation**: `.env` files are ignored by git; `.env.example` provides templates.
+- **Zero Hardcoded Secrets**: No database credentials, passwords, or secrets are tracked in version control.
+- **Parameterized Queries**: All database operations use strict SQL parameterization to prevent SQL injection.
+- **Password Security**: Passwords are encrypted using `bcryptjs` with salt factor 12 before storage.
+- **JWT Protection**: Secure, signed tokens with automatic expiration.
+- **Defense-in-Depth**: Express endpoints are fortified with Helmet security headers, CORS restrictions, and rate limiting on sensitive routes.
