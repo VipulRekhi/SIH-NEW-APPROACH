@@ -23,6 +23,7 @@ export interface CreateInstrumentInput {
   notes?: string | null;
   nameplate_file_id?: string | null;
   ocr_result_id?: string | null;
+  device_configuration?: any;
 }
 
 export interface UpdateInstrumentInput {
@@ -38,6 +39,7 @@ export interface UpdateInstrumentInput {
   unit?: string;
   status?: InstrumentStatus;
   notes?: string | null;
+  device_configuration?: any;
 }
 
 export interface InstrumentListFilter {
@@ -172,10 +174,21 @@ export class InstrumentService {
 
   static getFileViewUrl(instrumentId: string, fileId: string): string {
     const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
-    return `${baseUrl}/instruments/${instrumentId}/files/${fileId}/view`;
+    const token = localStorage.getItem('token') || '';
+    return `${baseUrl}/instruments/${instrumentId}/files/${fileId}/view${token ? `?token=${encodeURIComponent(token)}` : ''}`;
   }
 
   static async deleteFile(instrumentId: string, fileId: string): Promise<void> {
     await api.delete(`/instruments/${instrumentId}/files/${fileId}`);
   }
+
+  static async delete(id: string): Promise<void> {
+    await api.delete(`/instruments/${id}`);
+  }
+
+  static async getHistory(instrumentId: string): Promise<any[]> {
+    const response = await api.get<ApiResponse<{ history: any[] }>>(`/instruments/${instrumentId}/history`);
+    return response.data.data?.history || [];
+  }
 }
+

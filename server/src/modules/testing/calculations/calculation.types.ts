@@ -241,5 +241,5 @@ export interface MetrologicalValidationResult {
   isValid: boolean;
   errors: string[];
   warnings: string[];
-  max verificationIntervals(): number; // Max / e
+  verificationIntervals: number; // Max / e
 }

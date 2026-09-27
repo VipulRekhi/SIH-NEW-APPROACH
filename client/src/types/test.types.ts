@@ -48,6 +48,16 @@ export interface TestType {
   display_order: number;
 }
 
+export type WorkflowStatus =
+  | 'DRAFT'
+  | 'IN_PROGRESS'
+  | 'SUBMITTED_FOR_REVIEW'
+  | 'UNDER_REVIEW'
+  | 'APPROVED'
+  | 'RETURNED_FOR_CORRECTION'
+  | 'REJECTED'
+  | 'OFFICIAL_REPORT_GENERATED';
+
 export interface TestSession {
   id: string;
   instrument_id: string;
@@ -58,6 +68,16 @@ export interface TestSession {
   regulation_version: string;
   test_date: string;
   status: SessionStatus;
+  workflow_status: WorkflowStatus;
+  submitted_at?: string | null;
+  submitted_by?: string | null;
+  reviewed_at?: string | null;
+  reviewed_by?: string | null;
+  reviewer_comments?: string | null;
+  rejection_reason?: string | null;
+  returned_at?: string | null;
+  approved_at?: string | null;
+  approved_by?: string | null;
   environmental_conditions: {
     temperature?: number;
     humidity?: number;
@@ -95,8 +115,10 @@ export interface TestSession {
   unit?: string;
   laboratory_name?: string;
   technician_name?: string;
+  reviewer_name?: string;
   total_tests?: number;
   completed_tests?: number;
+  report_number?: string | null;
 }
 
 export interface TestSessionTest {

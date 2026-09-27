@@ -249,7 +249,14 @@ Run the automated test suite to verify database connectivity, authentication, RB
 npm run test:server
 ```
 
-### 2. Production Build Verification
+### 2. Phase 4 Report Generation & QR Verification Test Suite
+Run the end-to-end automated verification test for report numbering, unguessable public IDs, dynamic QR generation, A4 PDF creation, and standalone public verification:
+
+```bash
+npm run test:phase4
+```
+
+### 3. Production Build Verification
 Verify that both frontend and backend compile without errors:
 
 ```bash

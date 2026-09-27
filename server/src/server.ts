@@ -46,22 +46,20 @@ app.get('/api/health', async (_req: Request, res: Response) => {
 
 import testSessionRoutes from './routes/test-session.routes.js';
 
+import { reportRoutes, publicReportRoutes } from './routes/report.routes.js';
+import statsRoutes from './routes/stats.routes.js';
+import adminRoutes from './routes/admin.routes.js';
+
 // Functional Modules
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/laboratories', labRoutes);
 app.use('/api/instruments', instrumentRoutes);
 app.use('/api', testSessionRoutes);
-
-app.use('/api/reports', (_req: Request, res: Response) => {
-  res.status(501).json({
-    success: false,
-    error: {
-      code: 'NOT_IMPLEMENTED',
-      message: 'Report Generation & QR will be available in Phase 4.'
-    }
-  });
-});
+app.use('/api/reports', reportRoutes);
+app.use('/api/public/reports', publicReportRoutes);
+app.use('/api/stats', statsRoutes);
+app.use('/api/admin', adminRoutes);
 
 // 404 Route Handler
 app.use((_req: Request, res: Response) => {

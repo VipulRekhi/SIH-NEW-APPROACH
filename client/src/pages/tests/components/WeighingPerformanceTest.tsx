@@ -16,10 +16,11 @@ interface Props {
   sessionId: string;
   test: TestSessionTest;
   unit: string;
+  readOnly?: boolean;
   onUpdated: () => void;
 }
 
-export const WeighingPerformanceTest: React.FC<Props> = ({ sessionId, test, unit, onUpdated }) => {
+export const WeighingPerformanceTest: React.FC<Props> = ({ sessionId, test, unit, readOnly = false, onUpdated }) => {
   const [observations, setObservations] = useState<TestObservation[]>([]);
   const [results, setResults] = useState<TestResult[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -148,27 +149,29 @@ export const WeighingPerformanceTest: React.FC<Props> = ({ sessionId, test, unit
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={handleGeneratePlan}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded shadow-xs transition-colors"
-            title="Derive recommended test points from Min, Max, e, and MPE transition points"
-          >
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Generate Recommended Plan</span>
-          </button>
+        {!readOnly && (
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleGeneratePlan}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded shadow-xs transition-colors"
+              title="Derive recommended test points from Min, Max, e, and MPE transition points"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Generate Recommended Plan</span>
+            </button>
 
-          <button
-            type="button"
-            disabled={observations.length === 0 || calculating}
-            onClick={handleRunCalculation}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold uppercase tracking-wider text-white bg-blue-700 hover:bg-blue-800 disabled:opacity-50 rounded shadow-xs transition-colors"
-          >
-            <Play className="w-3.5 h-3.5 fill-current" />
-            <span>{calculating ? 'Calculating...' : 'Run Calculation'}</span>
-          </button>
-        </div>
+            <button
+              type="button"
+              disabled={observations.length === 0 || calculating}
+              onClick={handleRunCalculation}
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold uppercase tracking-wider text-white bg-blue-700 hover:bg-blue-800 disabled:opacity-50 rounded shadow-xs transition-colors"
+            >
+              <Play className="w-3.5 h-3.5 fill-current" />
+              <span>{calculating ? 'Calculating...' : 'Run Calculation'}</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {error && (
@@ -179,86 +182,88 @@ export const WeighingPerformanceTest: React.FC<Props> = ({ sessionId, test, unit
       )}
 
       {/* Observation Entry Form */}
-      <div className="bg-white border border-slate-200 rounded-lg p-4 shadow-xs">
-        <div className="text-xs font-bold text-slate-900 uppercase tracking-wide mb-3 flex items-center gap-1.5">
-          <Plus className="w-4 h-4 text-blue-700" />
-          <span>Add Physical Observation (Technician Entry)</span>
+      {!readOnly && (
+        <div className="bg-white border border-slate-200 rounded-lg p-4 shadow-xs">
+          <div className="text-xs font-bold text-slate-900 uppercase tracking-wide mb-3 flex items-center gap-1.5">
+            <Plus className="w-4 h-4 text-blue-700" />
+            <span>Add Physical Observation (Technician Entry)</span>
+          </div>
+
+          <form onSubmit={handleAddObservation} className="grid grid-cols-2 md:grid-cols-6 gap-3 text-xs">
+            <div>
+              <label className="text-slate-500 block mb-1">Direction:</label>
+              <select
+                value={direction}
+                onChange={(e) => setDirection(e.target.value as any)}
+                className="w-full border border-slate-300 rounded p-1.5 bg-white font-medium"
+              >
+                <option value="LOADING">Loading (Increasing)</option>
+                <option value="UNLOADING">Unloading (Decreasing)</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="text-slate-500 block mb-1">Test Load (L, {unit}):</label>
+              <input
+                type="number"
+                step="any"
+                required
+                value={loadValue}
+                onChange={(e) => setLoadValue(e.target.value)}
+                placeholder="e.g. 10.00"
+                className="w-full border border-slate-300 rounded p-1.5 bg-white font-mono"
+              />
+            </div>
+
+            <div>
+              <label className="text-slate-500 block mb-1">Indication (I, {unit}):</label>
+              <input
+                type="number"
+                step="any"
+                required
+                value={indicationValue}
+                onChange={(e) => setIndicationValue(e.target.value)}
+                placeholder="e.g. 10.005"
+                className="w-full border border-slate-300 rounded p-1.5 bg-white font-mono"
+              />
+            </div>
+
+            <div>
+              <label className="text-slate-500 block mb-1">Added Load (&Delta;L, {unit}):</label>
+              <input
+                type="number"
+                step="any"
+                value={additionalLoad}
+                onChange={(e) => setAdditionalLoad(e.target.value)}
+                placeholder="Changeover &Delta;L"
+                className="w-full border border-slate-300 rounded p-1.5 bg-white font-mono"
+              />
+            </div>
+
+            <div>
+              <label className="text-slate-500 block mb-1">Zero Error (E0, {unit}):</label>
+              <input
+                type="number"
+                step="any"
+                value={zeroError}
+                onChange={(e) => setZeroError(e.target.value)}
+                placeholder="E0"
+                className="w-full border border-slate-300 rounded p-1.5 bg-white font-mono"
+              />
+            </div>
+
+            <div className="flex items-end">
+              <button
+                type="submit"
+                className="w-full inline-flex items-center justify-center gap-1.5 py-1.5 px-3 bg-blue-700 hover:bg-blue-800 text-white rounded font-semibold text-xs transition-colors"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Record</span>
+              </button>
+            </div>
+          </form>
         </div>
-
-        <form onSubmit={handleAddObservation} className="grid grid-cols-2 md:grid-cols-6 gap-3 text-xs">
-          <div>
-            <label className="text-slate-500 block mb-1">Direction:</label>
-            <select
-              value={direction}
-              onChange={(e) => setDirection(e.target.value as any)}
-              className="w-full border border-slate-300 rounded p-1.5 bg-white font-medium"
-            >
-              <option value="LOADING">Loading (Increasing)</option>
-              <option value="UNLOADING">Unloading (Decreasing)</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="text-slate-500 block mb-1">Test Load (L, {unit}):</label>
-            <input
-              type="number"
-              step="any"
-              required
-              value={loadValue}
-              onChange={(e) => setLoadValue(e.target.value)}
-              placeholder="e.g. 10.00"
-              className="w-full border border-slate-300 rounded p-1.5 bg-white font-mono"
-            />
-          </div>
-
-          <div>
-            <label className="text-slate-500 block mb-1">Indication (I, {unit}):</label>
-            <input
-              type="number"
-              step="any"
-              required
-              value={indicationValue}
-              onChange={(e) => setIndicationValue(e.target.value)}
-              placeholder="e.g. 10.005"
-              className="w-full border border-slate-300 rounded p-1.5 bg-white font-mono"
-            />
-          </div>
-
-          <div>
-            <label className="text-slate-500 block mb-1">Added Load (&Delta;L, {unit}):</label>
-            <input
-              type="number"
-              step="any"
-              value={additionalLoad}
-              onChange={(e) => setAdditionalLoad(e.target.value)}
-              placeholder="Changeover &Delta;L"
-              className="w-full border border-slate-300 rounded p-1.5 bg-white font-mono"
-            />
-          </div>
-
-          <div>
-            <label className="text-slate-500 block mb-1">Zero Error (E0, {unit}):</label>
-            <input
-              type="number"
-              step="any"
-              value={zeroError}
-              onChange={(e) => setZeroError(e.target.value)}
-              placeholder="E0"
-              className="w-full border border-slate-300 rounded p-1.5 bg-white font-mono"
-            />
-          </div>
-
-          <div className="flex items-end">
-            <button
-              type="submit"
-              className="w-full inline-flex items-center justify-center gap-1.5 py-1.5 px-3 bg-blue-700 hover:bg-blue-800 text-white rounded font-semibold text-xs transition-colors"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Record</span>
-            </button>
-          </div>
-        </form>
-      </div>
+      )}
 
       {/* Observations Table with Deterministic Calculation Columns */}
       <div className="bg-white border border-slate-200 rounded-lg shadow-xs overflow-hidden">
@@ -285,13 +290,13 @@ export const WeighingPerformanceTest: React.FC<Props> = ({ sessionId, test, unit
                 <th className="px-3 py-2.5">Corrected (Ec)</th>
                 <th className="px-3 py-2.5">MPE Limit</th>
                 <th className="px-3 py-2.5">Result</th>
-                <th className="px-3 py-2.5 text-right">Action</th>
+                {!readOnly && <th className="px-3 py-2.5 text-right">Action</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 font-mono">
               {observations.length === 0 ? (
                 <tr>
-                  <td colSpan={11} className="px-4 py-8 text-center text-slate-400 font-sans">
+                  <td colSpan={readOnly ? 10 : 11} className="px-4 py-8 text-center text-slate-400 font-sans">
                     No observations recorded yet. Enter readings above or click "Generate Recommended Plan".
                   </td>
                 </tr>
@@ -345,16 +350,18 @@ export const WeighingPerformanceTest: React.FC<Props> = ({ sessionId, test, unit
                           <span className="text-[11px] text-slate-400 italic">Pending calc</span>
                         )}
                       </td>
-                      <td className="px-3 py-2 text-right">
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteObservation(obs.id)}
-                          className="p-1 text-slate-400 hover:text-red-700 rounded transition-colors"
-                          title="Delete observation"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </td>
+                      {!readOnly && (
+                        <td className="px-3 py-2 text-right">
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteObservation(obs.id)}
+                            className="p-1 text-slate-400 hover:text-red-700 rounded transition-colors"
+                            title="Delete observation"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </td>
+                      )}
                     </tr>
                   );
                 })

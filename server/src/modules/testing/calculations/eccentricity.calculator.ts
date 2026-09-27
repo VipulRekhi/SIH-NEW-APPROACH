@@ -3,10 +3,11 @@ import {
   EccentricityResult,
   EccentricityPositionResult,
   EccentricSupportCase,
-  RuleEvaluationResult
+  RuleEvaluationResult,
+  TestComplianceStatus
 } from './calculation.types.js';
-import { MpeCalculator } from './mpe.calculator.ts';
-import { ChangeoverCalculator } from './changeover.calculator.ts';
+import { MpeCalculator } from './mpe.calculator.js';
+import { ChangeoverCalculator } from './changeover.calculator.js';
 import { DecimalUtils, Decimal } from './decimal.utils.js';
 
 export class EccentricityCalculator {

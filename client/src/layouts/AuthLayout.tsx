@@ -17,8 +17,8 @@ export const AuthLayout: React.FC = () => {
         </p>
       </div>
 
-      <div className="mt-6 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-6 shadow-xl rounded-lg border border-slate-200 sm:px-10">
+      <div className="mt-6 sm:mx-auto sm:w-full sm:max-w-2xl">
+        <div className="bg-white py-8 px-6 shadow-xl rounded-lg border border-slate-200 sm:px-8">
           <Outlet />
         </div>
 

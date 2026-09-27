@@ -1,5 +1,6 @@
 import { Response, NextFunction } from 'express';
 import { InstrumentService } from '../services/instrument.service.js';
+import { TestSessionRepository } from '../repositories/test-session.repository.js';
 import { AuthenticatedRequest, ApiResponse, DocumentType, InstrumentStatus } from '../types/index.js';
 import { AppError } from '../middleware/error.middleware.js';
 
@@ -23,7 +24,9 @@ export class InstrumentController {
         unit,
         notes,
         nameplate_file_id,
-        ocr_result_id
+        ocr_result_id,
+        device_configuration,
+        deviceConfiguration
       } = req.body;
 
       const instrument = await InstrumentService.createInstrument(
@@ -39,6 +42,7 @@ export class InstrumentController {
           verificationScaleInterval: Number(verification_scale_interval),
           unit,
           notes,
+          deviceConfiguration: device_configuration || deviceConfiguration || {},
           nameplate_file_id,
           ocr_result_id
         },
@@ -131,7 +135,9 @@ export class InstrumentController {
         verification_scale_interval,
         unit,
         status,
-        notes
+        notes,
+        device_configuration,
+        deviceConfiguration
       } = req.body;
 
       const updated = await InstrumentService.updateInstrument(
@@ -148,7 +154,8 @@ export class InstrumentController {
           verificationScaleInterval: verification_scale_interval !== undefined ? Number(verification_scale_interval) : undefined,
           unit,
           status,
-          notes
+          notes,
+          deviceConfiguration: device_configuration !== undefined ? device_configuration : deviceConfiguration
         },
         req.user
       );
@@ -272,6 +279,40 @@ export class InstrumentController {
         }
       };
 
+      res.status(200).json(response);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async getInstrumentHistory(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      if (!req.user) {
+        throw new AppError('Authentication required', 401, 'UNAUTHORIZED');
+      }
+      const { id } = req.params;
+      const history = await TestSessionRepository.getInstrumentHistory(id);
+      const response: ApiResponse = {
+        success: true,
+        data: { history }
+      };
+      res.status(200).json(response);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async deleteInstrument(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      if (!req.user) {
+        throw new AppError('Authentication required', 401, 'UNAUTHORIZED');
+      }
+      const { id } = req.params;
+      await InstrumentService.deleteInstrument(id, req.user);
+      const response: ApiResponse = {
+        success: true,
+        data: { message: 'Instrument and associated records deleted successfully.' }
+      };
       res.status(200).json(response);
     } catch (err) {
       next(err);

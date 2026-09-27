@@ -48,6 +48,9 @@ export const CreateInstrumentPage: React.FC = () => {
   const [scaleInterval, setScaleInterval] = useState<string>('');
   const [verificationScaleInterval, setVerificationScaleInterval] = useState<string>('');
   const [unit, setUnit] = useState<string>('kg');
+  const [auxiliaryIndicatingDevices, setAuxiliaryIndicatingDevices] = useState<'YES' | 'NO' | 'UNKNOWN'>('NO');
+  const [remoteDisplay, setRemoteDisplay] = useState<'YES' | 'NO' | 'UNKNOWN'>('NO');
+  const [printer, setPrinter] = useState<'YES' | 'NO' | 'UNKNOWN'>('NO');
   const [notes, setNotes] = useState<string>('');
 
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -155,6 +158,11 @@ export const CreateInstrumentPage: React.FC = () => {
         verification_scale_interval: eVal,
         unit,
         notes: notes || null,
+        device_configuration: {
+          auxiliary_indicating_devices: auxiliaryIndicatingDevices,
+          remote_display: remoteDisplay,
+          printer: printer
+        },
         nameplate_file_id: scanResult?.file?.id || null,
         ocr_result_id: scanResult?.ocr?.id || null
       });
@@ -599,6 +607,68 @@ export const CreateInstrumentPage: React.FC = () => {
                           {unit}
                         </span>
                       </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Peripheral & Indicating Devices Configuration */}
+                <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg space-y-3">
+                  <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+                    <span className="text-xs font-bold text-slate-800 uppercase tracking-wide">
+                      Peripherals & Indicating Devices (Clauses 3.6.3 & 3.6.4)
+                    </span>
+                    <span className="text-[10px] text-slate-500">
+                      Explicit configuration avoids false REVIEW_REQUIRED flags
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium text-slate-700 mb-1">
+                        Auxiliary Indicators (Clause 3.6.3)
+                      </label>
+                      <select
+                        id="inst-aux-devices"
+                        value={auxiliaryIndicatingDevices}
+                        onChange={(e) => setAuxiliaryIndicatingDevices(e.target.value as any)}
+                        className="w-full px-2.5 py-2 text-xs border border-slate-300 rounded focus:ring-1 focus:ring-blue-600 focus:border-blue-600 outline-none text-slate-900 bg-white"
+                      >
+                        <option value="NO">NO — None Present (Test NOT_APPLICABLE)</option>
+                        <option value="YES">YES — Auxiliary Device Present</option>
+                        <option value="UNKNOWN">UNKNOWN — Manual Review Required</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-medium text-slate-700 mb-1">
+                        Remote Display
+                      </label>
+                      <select
+                        id="inst-remote-display"
+                        value={remoteDisplay}
+                        onChange={(e) => setRemoteDisplay(e.target.value as any)}
+                        className="w-full px-2.5 py-2 text-xs border border-slate-300 rounded focus:ring-1 focus:ring-blue-600 focus:border-blue-600 outline-none text-slate-900 bg-white"
+                      >
+                        <option value="NO">NO — None Present</option>
+                        <option value="YES">YES — Remote Display Present</option>
+                        <option value="UNKNOWN">UNKNOWN — Manual Review Required</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-medium text-slate-700 mb-1">
+                        Attached Printer (Clause 3.6.4)
+                      </label>
+                      <select
+                        id="inst-printer"
+                        value={printer}
+                        onChange={(e) => setPrinter(e.target.value as any)}
+                        className="w-full px-2.5 py-2 text-xs border border-slate-300 rounded focus:ring-1 focus:ring-blue-600 focus:border-blue-600 outline-none text-slate-900 bg-white"
+                      >
+                        <option value="NO">NO — No Printer (Test NOT_APPLICABLE)</option>
+                        <option value="YES">YES — Printer Present</option>
+                        <option value="UNKNOWN">UNKNOWN — Manual Review Required</option>
+                      </select>
                     </div>
                   </div>
                 </div>

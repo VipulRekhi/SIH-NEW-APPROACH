@@ -18,6 +18,7 @@ interface Props {
   unit: string;
   scaleIntervalD: number;
   maxCapacity: number;
+  readOnly?: boolean;
   onUpdated: () => void;
 }
 
@@ -27,6 +28,7 @@ export const DiscriminationTest: React.FC<Props> = ({
   unit,
   scaleIntervalD,
   maxCapacity,
+  readOnly = false,
   onUpdated
 }) => {
   const [observations, setObservations] = useState<TestObservation[]>([]);
@@ -178,129 +180,133 @@ export const DiscriminationTest: React.FC<Props> = ({
           <Sparkles className="w-3.5 h-3.5 text-blue-600" />
           <span>Clause 3.8 Mandated Test Loads:</span>
         </span>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => handleApplyPreset(scaleIntervalD * 20)}
-            className="px-2.5 py-1 bg-white hover:bg-slate-100 border border-slate-300 rounded font-mono text-[11px] text-slate-800 shadow-2xs"
-          >
-            Min ({(scaleIntervalD * 20).toFixed(2)} {unit})
-          </button>
-          <button
-            type="button"
-            onClick={() => handleApplyPreset(maxCapacity * 0.5)}
-            className="px-2.5 py-1 bg-white hover:bg-slate-100 border border-slate-300 rounded font-mono text-[11px] text-slate-800 shadow-2xs"
-          >
-            0.5 Max ({(maxCapacity * 0.5).toFixed(2)} {unit})
-          </button>
-          <button
-            type="button"
-            onClick={() => handleApplyPreset(maxCapacity)}
-            className="px-2.5 py-1 bg-white hover:bg-slate-100 border border-slate-300 rounded font-mono text-[11px] text-slate-800 shadow-2xs"
-          >
-            Max ({maxCapacity.toFixed(2)} {unit})
-          </button>
-        </div>
+        {!readOnly && (
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => handleApplyPreset(scaleIntervalD * 20)}
+              className="px-2.5 py-1 bg-white hover:bg-slate-100 border border-slate-300 rounded font-mono text-[11px] text-slate-800 shadow-2xs"
+            >
+              Min ({(scaleIntervalD * 20).toFixed(2)} {unit})
+            </button>
+            <button
+              type="button"
+              onClick={() => handleApplyPreset(maxCapacity * 0.5)}
+              className="px-2.5 py-1 bg-white hover:bg-slate-100 border border-slate-300 rounded font-mono text-[11px] text-slate-800 shadow-2xs"
+            >
+              0.5 Max ({(maxCapacity * 0.5).toFixed(2)} {unit})
+            </button>
+            <button
+              type="button"
+              onClick={() => handleApplyPreset(maxCapacity)}
+              className="px-2.5 py-1 bg-white hover:bg-slate-100 border border-slate-300 rounded font-mono text-[11px] text-slate-800 shadow-2xs"
+            >
+              Max ({maxCapacity.toFixed(2)} {unit})
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Input Form */}
-      <div className="bg-white border border-slate-200 rounded-lg p-5 shadow-xs space-y-4">
-        <div className="text-xs font-bold text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-2 flex items-center gap-2">
-          <Zap className="w-4 h-4 text-amber-500" />
-          <span>Record 1.4d Discrimination Observation</span>
+      {!readOnly && (
+        <div className="bg-white border border-slate-200 rounded-lg p-5 shadow-xs space-y-4">
+          <div className="text-xs font-bold text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-2 flex items-center gap-2">
+            <Zap className="w-4 h-4 text-amber-500" />
+            <span>Record 1.4d Discrimination Observation</span>
+          </div>
+
+          <form onSubmit={handleAddReading} className="space-y-4 text-xs">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div>
+                <label className="text-slate-600 font-semibold block mb-1">
+                  Base Test Load ({unit}):
+                </label>
+                <input
+                  type="number"
+                  step="any"
+                  required
+                  value={testLoad}
+                  onChange={(e) => {
+                    setTestLoad(e.target.value);
+                    setInitialIndication(e.target.value);
+                    setResultingIndication((parseFloat(e.target.value || '0') + scaleIntervalD).toFixed(4));
+                  }}
+                  className="w-full border border-slate-300 rounded p-2 bg-white font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="text-slate-600 font-semibold block mb-1">
+                  Initial Indication I ({unit}):
+                </label>
+                <input
+                  type="number"
+                  step="any"
+                  required
+                  value={initialIndication}
+                  onChange={(e) => {
+                    setInitialIndication(e.target.value);
+                    setResultingIndication((parseFloat(e.target.value || '0') + scaleIntervalD).toFixed(4));
+                  }}
+                  className="w-full border border-slate-300 rounded p-2 bg-white font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="text-slate-600 font-semibold block mb-1">
+                  Mandated Load (1.4d = {required14d} {unit}):
+                </label>
+                <input
+                  type="number"
+                  step="any"
+                  required
+                  value={addedLoad}
+                  onChange={(e) => setAddedLoad(e.target.value)}
+                  className="w-full border border-slate-300 rounded p-2 bg-white font-mono font-bold text-blue-800"
+                />
+              </div>
+
+              <div>
+                <label className="text-slate-600 font-semibold block mb-1">
+                  Observed Resulting Indication ({unit}):
+                </label>
+                <input
+                  type="number"
+                  step="any"
+                  required
+                  value={resultingIndication}
+                  onChange={(e) => setResultingIndication(e.target.value)}
+                  className="w-full border border-slate-300 rounded p-2 bg-white font-mono font-bold text-slate-900"
+                />
+              </div>
+            </div>
+
+            <div className="p-3 bg-slate-50 border border-slate-200 rounded font-mono text-xs flex items-center justify-between">
+              <div>
+                <span>Expected Indication: <strong>{expectedIndication} {unit}</strong> (I + d)</span>
+                <span className="text-slate-400 mx-2">&bull;</span>
+                <span>Observed Result: <strong>{resultingIndication} {unit}</strong></span>
+                <span className="text-slate-400 mx-2">&bull;</span>
+                <span>Deviation: <strong>{observedDeviation} {unit}</strong></span>
+              </div>
+              <span className={`text-[11px] font-sans font-bold px-2 py-0.5 rounded ${parseFloat(observedDeviation) === 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'}`}>
+                {parseFloat(observedDeviation) === 0 ? 'COMPLIANT STEP (I + d)' : 'INVALID / NON-COMPLIANT'}
+              </span>
+            </div>
+
+            <div className="flex justify-end pt-1">
+              <button
+                type="submit"
+                disabled={calculating}
+                className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold uppercase tracking-wider text-white bg-blue-700 hover:bg-blue-800 disabled:opacity-50 rounded shadow-xs transition-colors"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>{calculating ? 'Recording...' : 'Record & Evaluate Discrimination'}</span>
+              </button>
+            </div>
+          </form>
         </div>
-
-        <form onSubmit={handleAddReading} className="space-y-4 text-xs">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
-              <label className="text-slate-600 font-semibold block mb-1">
-                Base Test Load ({unit}):
-              </label>
-              <input
-                type="number"
-                step="any"
-                required
-                value={testLoad}
-                onChange={(e) => {
-                  setTestLoad(e.target.value);
-                  setInitialIndication(e.target.value);
-                  setResultingIndication((parseFloat(e.target.value || '0') + scaleIntervalD).toFixed(4));
-                }}
-                className="w-full border border-slate-300 rounded p-2 bg-white font-mono"
-              />
-            </div>
-
-            <div>
-              <label className="text-slate-600 font-semibold block mb-1">
-                Initial Indication I ({unit}):
-              </label>
-              <input
-                type="number"
-                step="any"
-                required
-                value={initialIndication}
-                onChange={(e) => {
-                  setInitialIndication(e.target.value);
-                  setResultingIndication((parseFloat(e.target.value || '0') + scaleIntervalD).toFixed(4));
-                }}
-                className="w-full border border-slate-300 rounded p-2 bg-white font-mono"
-              />
-            </div>
-
-            <div>
-              <label className="text-slate-600 font-semibold block mb-1">
-                Mandated Load (1.4d = {required14d} {unit}):
-              </label>
-              <input
-                type="number"
-                step="any"
-                required
-                value={addedLoad}
-                onChange={(e) => setAddedLoad(e.target.value)}
-                className="w-full border border-slate-300 rounded p-2 bg-white font-mono font-bold text-blue-800"
-              />
-            </div>
-
-            <div>
-              <label className="text-slate-600 font-semibold block mb-1">
-                Observed Resulting Indication ({unit}):
-              </label>
-              <input
-                type="number"
-                step="any"
-                required
-                value={resultingIndication}
-                onChange={(e) => setResultingIndication(e.target.value)}
-                className="w-full border border-slate-300 rounded p-2 bg-white font-mono font-bold text-slate-900"
-              />
-            </div>
-          </div>
-
-          <div className="p-3 bg-slate-50 border border-slate-200 rounded font-mono text-xs flex items-center justify-between">
-            <div>
-              <span>Expected Indication: <strong>{expectedIndication} {unit}</strong> (I + d)</span>
-              <span className="text-slate-400 mx-2">&bull;</span>
-              <span>Observed Result: <strong>{resultingIndication} {unit}</strong></span>
-              <span className="text-slate-400 mx-2">&bull;</span>
-              <span>Deviation: <strong>{observedDeviation} {unit}</strong></span>
-            </div>
-            <span className={`text-[11px] font-sans font-bold px-2 py-0.5 rounded ${parseFloat(observedDeviation) === 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'}`}>
-              {parseFloat(observedDeviation) === 0 ? 'COMPLIANT STEP (I + d)' : 'INVALID / NON-COMPLIANT'}
-            </span>
-          </div>
-
-          <div className="flex justify-end pt-1">
-            <button
-              type="submit"
-              disabled={calculating}
-              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold uppercase tracking-wider text-white bg-blue-700 hover:bg-blue-800 disabled:opacity-50 rounded shadow-xs transition-colors"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>{calculating ? 'Recording...' : 'Record & Evaluate Discrimination'}</span>
-            </button>
-          </div>
-        </form>
-      </div>
+      )}
 
       {/* Observations Table */}
       <div className="bg-white border border-slate-200 rounded-lg shadow-xs overflow-hidden">
@@ -326,13 +332,13 @@ export const DiscriminationTest: React.FC<Props> = ({
               <th className="px-3 py-2.5">Observed Indication</th>
               <th className="px-3 py-2.5">Deviation</th>
               <th className="px-3 py-2.5">Result</th>
-              <th className="px-3 py-2.5 text-right font-sans">Action</th>
+              {!readOnly && <th className="px-3 py-2.5 text-right font-sans">Action</th>}
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-200">
             {observations.length === 0 ? (
               <tr>
-                <td colSpan={9} className="px-4 py-8 text-center text-slate-400 font-sans">
+                <td colSpan={readOnly ? 8 : 9} className="px-4 py-8 text-center text-slate-400 font-sans">
                   No discrimination observations recorded yet. Select a preset or enter values above.
                 </td>
               </tr>
@@ -361,16 +367,18 @@ export const DiscriminationTest: React.FC<Props> = ({
                         <span className="text-[11px] text-red-700 bg-red-50 px-2 py-0.5 rounded border border-red-200">FAIL (Invalid)</span>
                       )}
                     </td>
-                    <td className="px-3 py-2 text-right font-sans">
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteObservation(obs.id)}
-                        className="p-1 text-slate-400 hover:text-red-700 transition-colors"
-                        title="Delete reading"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </td>
+                    {!readOnly && (
+                      <td className="px-3 py-2 text-right font-sans">
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteObservation(obs.id)}
+                          className="p-1 text-slate-400 hover:text-red-700 transition-colors"
+                          title="Delete reading"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 );
               })

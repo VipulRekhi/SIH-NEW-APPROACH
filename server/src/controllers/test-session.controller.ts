@@ -50,10 +50,11 @@ export class TestSessionController {
     try {
       if (!req.user) throw new AppError('Authentication required', 401, 'UNAUTHORIZED');
 
-      const { status, search, page, limit } = req.query;
+      const { status, search, page, limit, workflow_status, workflowStatus } = req.query;
       const result = await TestSessionService.listSessions(
         {
           status: status as string,
+          workflowStatus: (workflow_status || workflowStatus) as string,
           search: search as string,
           page: page ? parseInt(page as string, 10) : 1,
           limit: limit ? parseInt(limit as string, 10) : 20
@@ -312,6 +313,122 @@ export class TestSessionController {
       const response: ApiResponse = {
         success: true,
         data: { rules }
+      };
+      res.status(200).json(response);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async deleteTestData(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      if (!req.user) throw new AppError('Authentication required', 401, 'UNAUTHORIZED');
+      const { id, testId } = req.params;
+
+      const result = await TestSessionService.deleteTestData(id, testId, req.user);
+      const response: ApiResponse = {
+        success: true,
+        data: result
+      };
+      res.status(200).json(response);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  // PHASE 5 WORKFLOW TRANSITIONS
+  static async submitSession(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      if (!req.user) throw new AppError('Authentication required', 401, 'UNAUTHORIZED');
+      const { id } = req.params;
+
+      const result = await TestSessionService.submitForReview(id, req.user);
+      const response: ApiResponse = {
+        success: true,
+        data: result
+      };
+      res.status(200).json(response);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async startReview(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      if (!req.user) throw new AppError('Authentication required', 401, 'UNAUTHORIZED');
+      const { id } = req.params;
+
+      const result = await TestSessionService.startReview(id, req.user);
+      const response: ApiResponse = {
+        success: true,
+        data: result
+      };
+      res.status(200).json(response);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async returnSession(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      if (!req.user) throw new AppError('Authentication required', 401, 'UNAUTHORIZED');
+      const { id } = req.params;
+      const { comments } = req.body;
+
+      const result = await TestSessionService.returnForCorrection(id, comments, req.user);
+      const response: ApiResponse = {
+        success: true,
+        data: result
+      };
+      res.status(200).json(response);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async rejectSession(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      if (!req.user) throw new AppError('Authentication required', 401, 'UNAUTHORIZED');
+      const { id } = req.params;
+      const { reason } = req.body;
+
+      const result = await TestSessionService.rejectSession(id, reason, req.user);
+      const response: ApiResponse = {
+        success: true,
+        data: result
+      };
+      res.status(200).json(response);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async approveSession(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      if (!req.user) throw new AppError('Authentication required', 401, 'UNAUTHORIZED');
+      const { id } = req.params;
+      const { comments } = req.body;
+
+      const result = await TestSessionService.approveSession(id, comments, req.user);
+      const response: ApiResponse = {
+        success: true,
+        data: result
+      };
+      res.status(200).json(response);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async deleteSession(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      if (!req.user) throw new AppError('Authentication required', 401, 'UNAUTHORIZED');
+      const { id } = req.params;
+
+      await TestSessionService.deleteSession(id, req.user);
+      const response: ApiResponse = {
+        success: true,
+        data: { message: 'Test session deleted successfully.' }
       };
       res.status(200).json(response);
     } catch (err) {

@@ -1,6 +1,7 @@
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import { query } from '../config/db.js';
 import { InstrumentRepository, CreateInstrumentData, UpdateInstrumentData, InstrumentFilter } from '../repositories/instrument.repository.js';
 import { FileRepository } from '../repositories/file.repository.js';
 import { OcrRepository } from '../repositories/ocr.repository.js';
@@ -337,5 +338,104 @@ export class InstrumentService {
       file: fileRecord,
       ocr: savedOcr
     };
+  }
+
+  /**
+   * Deletes an instrument and cascades deletion to associated test sessions, test data, OCR results, and files.
+   * Role restriction: Approved official records cannot be deleted by technicians.
+   */
+  static async deleteInstrument(id: string, user: JwtPayload): Promise<void> {
+    const instrument = await InstrumentRepository.findById(id);
+    if (!instrument) {
+      throw new AppError('Instrument not found.', 404, 'INSTRUMENT_NOT_FOUND');
+    }
+
+    // Role restrictions:
+    // Check if approved official test sessions exist
+    const approvedCheck = await query(
+      `SELECT COUNT(*)::int as count FROM test_sessions WHERE instrument_id = $1 AND workflow_status IN ('APPROVED', 'OFFICIAL_REPORT_GENERATED')`,
+      [id]
+    );
+    const hasApproved = (approvedCheck.rows[0]?.count || 0) > 0;
+
+    if (hasApproved && user.role !== 'admin') {
+      throw new AppError(
+        'Cannot delete instrument with approved official test reports. Official compliance records are locked. Only an Administrator can perform this administrative cleanup.',
+        403,
+        'FORBIDDEN'
+      );
+    }
+
+    if (user.role === 'technician' && instrument.created_by !== user.userId) {
+      throw new AppError('Technicians can only delete instruments they created.', 403, 'FORBIDDEN');
+    }
+
+    // Cascading deletion:
+    // 1. Delete reports
+    await query('DELETE FROM reports WHERE instrument_id = $1', [id]);
+
+    // 2. Delete test observations
+    await query(`
+      DELETE FROM test_observations 
+      WHERE test_session_test_id IN (
+        SELECT tst.id FROM test_session_tests tst
+        JOIN test_sessions ts ON tst.test_session_id = ts.id
+        WHERE ts.instrument_id = $1
+      )
+    `, [id]);
+
+    // 3. Delete test results
+    await query(`
+      DELETE FROM test_results 
+      WHERE test_session_test_id IN (
+        SELECT tst.id FROM test_session_tests tst
+        JOIN test_sessions ts ON tst.test_session_id = ts.id
+        WHERE ts.instrument_id = $1
+      )
+    `, [id]);
+
+    // 4. Delete test session tests
+    await query(`
+      DELETE FROM test_session_tests 
+      WHERE test_session_id IN (
+        SELECT id FROM test_sessions WHERE instrument_id = $1
+      )
+    `, [id]);
+
+    // 5. Delete test sessions
+    await query('DELETE FROM test_sessions WHERE instrument_id = $1', [id]);
+
+    // 6. Delete OCR results
+    await query('DELETE FROM ocr_results WHERE instrument_id = $1', [id]);
+
+    // 7. Delete instrument files
+    await query('DELETE FROM instrument_files WHERE instrument_id = $1', [id]);
+
+    // 8. Delete physical storage directory if exists
+    const instDir = path.join(STORAGE_DIR, 'instruments', id);
+    if (fs.existsSync(instDir)) {
+      try {
+        fs.rmSync(instDir, { recursive: true, force: true });
+      } catch (e) {
+        console.warn('Could not remove physical storage folder for instrument:', id, e);
+      }
+    }
+
+    // 9. Delete instrument record
+    await query('DELETE FROM instruments WHERE id = $1', [id]);
+
+    // 10. Audit log
+    await AuditRepository.log({
+      userId: user.userId,
+      action: 'INSTRUMENT_DELETED',
+      entityType: 'INSTRUMENT',
+      entityId: id,
+      metadata: {
+        manufacturer: instrument.manufacturer,
+        model_number: instrument.model_number,
+        serial_number: instrument.serial_number,
+        deleted_by: user.email
+      }
+    });
   }
 }

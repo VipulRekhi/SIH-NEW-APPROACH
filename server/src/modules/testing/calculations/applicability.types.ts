@@ -16,15 +16,21 @@ export type TestResultStatus =
   | 'REVIEW_REQUIRED'
   | 'NOT_APPLICABLE';
 
+export type TriState = 'YES' | 'NO' | 'UNKNOWN';
+
 export interface InstrumentConfiguration {
   indicationType?: 'digital' | 'analog' | 'non_self';
-  hasMultipleIndicators?: boolean;
-  hasRemoteDisplay?: boolean;
-  hasPrinter?: boolean;
-  hasEquilibriumExtension?: boolean;
-  hasTareDevice?: boolean;
-  isTiltSensitive?: boolean;
-  isRollingLoad?: boolean;
+  auxiliary_indicating_devices?: TriState | boolean;
+  remote_display?: TriState | boolean;
+  printer?: TriState | boolean;
+  hasMultipleIndicators?: TriState | boolean;
+  hasRemoteDisplay?: TriState | boolean;
+  hasPrinter?: TriState | boolean;
+  hasEquilibriumExtension?: TriState | boolean;
+  equilibrium_extension?: TriState | boolean;
+  hasTareDevice?: TriState | boolean;
+  isTiltSensitive?: TriState | boolean;
+  isRollingLoad?: TriState | boolean;
   supportsCount?: number;
   receptorType?: 'PLATFORM' | 'SUSPENDED' | 'TANK_HOPPER' | 'RAIL' | 'OTHER';
   [key: string]: any;

@@ -8,7 +8,6 @@ import { LoginPage } from '../pages/LoginPage';
 import { RegisterPage } from '../pages/RegisterPage';
 import { ForgotPasswordPage } from '../pages/ForgotPasswordPage';
 import { DashboardPage } from '../pages/DashboardPage';
-import { PlaceholderPage } from '../pages/PlaceholderPage';
 
 import { InstrumentListPage } from '../pages/instruments/InstrumentListPage';
 import { CreateInstrumentPage } from '../pages/instruments/CreateInstrumentPage';
@@ -19,18 +18,22 @@ import { TestSessionListPage } from '../pages/tests/TestSessionListPage';
 import { CreateTestSessionPage } from '../pages/tests/CreateTestSessionPage';
 import { TestWorkspacePage } from '../pages/tests/TestWorkspacePage';
 
-import {
-  FileText,
-  Users,
-  Building2,
-  Settings
-} from 'lucide-react';
+import { ReportsListPage } from '../pages/reports/ReportsListPage';
+import { PublicReportVerificationPage } from '../pages/public/PublicReportVerificationPage';
+
+import { UsersPage } from '../pages/admin/UsersPage';
+import { LaboratoriesPage } from '../pages/admin/LaboratoriesPage';
+import { AuditLogsPage } from '../pages/admin/AuditLogsPage';
+import { SettingsPage } from '../pages/admin/SettingsPage';
 
 export const AppRoutes: React.FC = () => {
   return (
     <Routes>
       {/* Root Redirect */}
       <Route path="/" element={<Navigate to="/app/dashboard" replace />} />
+
+      {/* Standalone Isolated Public Verification Route (Phase 4) - NO AUTH, NO PORTAL SHELL */}
+      <Route path="/public/report/:verificationId" element={<PublicReportVerificationPage />} />
 
       {/* Public Auth Routes */}
       <Route element={<AuthLayout />}>
@@ -62,83 +65,14 @@ export const AppRoutes: React.FC = () => {
         <Route path="tests/new" element={<CreateTestSessionPage />} />
         <Route path="tests/:id" element={<TestWorkspacePage />} />
 
-        {/* Phase 4: Official Test Report Generator Placeholder */}
-        <Route
-          path="reports"
-          element={
-            <PlaceholderPage
-              title="Official Test Report Generator & QR Verification"
-              phase={4}
-              phaseName="Phase 4: Report Generation + QR"
-              description="Automated compilation of OIML R-76 format test reports, digital certificates, and tamper-evident QR verification codes."
-              icon={FileText}
-              targetDeliverables={[
-                'Standardized OIML R-76 PDF Report Generator',
-                'Cryptographic hash generation for test integrity',
-                'Tamper-evident QR code embedding',
-                'Public verification portal endpoint'
-              ]}
-            />
-          }
-        />
+        {/* Phase 4: Official Test Report & QR Verification Registry */}
+        <Route path="reports" element={<ReportsListPage />} />
 
-        {/* Phase 5: Administration Placeholders */}
-        <Route
-          path="users"
-          element={
-            <PlaceholderPage
-              title="User Directory & Role Administration"
-              phase={5}
-              phaseName="Phase 5: Dashboard & Repository"
-              description="Administrative user provisioning, technician role assignment, and access control audit logs."
-              icon={Users}
-              targetDeliverables={[
-                'Administrative user management portal',
-                'Role promotion/demotion workflow',
-                'Technician test assignment tracking',
-                'Security audit logs'
-              ]}
-            />
-          }
-        />
-
-        <Route
-          path="laboratories"
-          element={
-            <PlaceholderPage
-              title="Laboratory Facilities & Branch Network"
-              phase={5}
-              phaseName="Phase 5: Dashboard & Repository"
-              description="Registry of verified legal metrology testing laboratories and verification centers."
-              icon={Building2}
-              targetDeliverables={[
-                'Laboratory facility database management',
-                'Jurisdictional zone assignment',
-                'Environmental test conditions monitoring',
-                'Standard weight sets traceability'
-              ]}
-            />
-          }
-        />
-
-        <Route
-          path="settings"
-          element={
-            <PlaceholderPage
-              title="System Configuration & Standards Parameters"
-              phase={5}
-              phaseName="Phase 5: Dashboard & Repository"
-              description="OIML standard threshold configurations, tolerance factors, and environment parameters."
-              icon={Settings}
-              targetDeliverables={[
-                'MPE threshold configuration matrices',
-                'Laboratory environmental tolerance bounds',
-                'Backup & audit retention policies',
-                'System diagnostic tools'
-              ]}
-            />
-          }
-        />
+        {/* Phase 5: Administration & System Registry */}
+        <Route path="users" element={<UsersPage />} />
+        <Route path="laboratories" element={<LaboratoriesPage />} />
+        <Route path="audit-logs" element={<AuditLogsPage />} />
+        <Route path="settings" element={<SettingsPage />} />
       </Route>
 
       {/* Catch-all fallback */}

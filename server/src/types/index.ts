@@ -122,3 +122,29 @@ export interface ApiResponse<T = any> {
     details?: any;
   };
 }
+
+export interface Report {
+  id: string;
+  report_number: string;
+  public_verification_id: string;
+  test_session_id: string;
+  instrument_id: string;
+  laboratory_id?: string | null;
+  laboratory_name?: string | null;
+  generated_by?: string | null;
+  generated_by_name?: string | null;
+  regulatory_mode: string;
+  regulation_version: string;
+  overall_status: string;
+  compliance_explanation: string;
+  compliance_summary: any;
+  environmental_snapshot: any;
+  instrument_snapshot: any;
+  test_results_snapshot: any[];
+  verification_url: string;
+  pdf_file_name: string;
+  pdf_path: string;
+  qr_data_url?: string;
+  created_at: Date;
+  updated_at: Date;
+}

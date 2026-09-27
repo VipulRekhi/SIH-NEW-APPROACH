@@ -8,7 +8,18 @@ export function authenticateToken(
   next: NextFunction
 ): void {
   const authHeader = req.headers['authorization'];
-  if (!authHeader) {
+  let token: string | undefined;
+
+  if (authHeader) {
+    const parts = authHeader.split(' ');
+    if (parts.length === 2 && parts[0] === 'Bearer') {
+      token = parts[1];
+    }
+  } else if (req.query && req.query.token) {
+    token = req.query.token as string;
+  }
+
+  if (!token) {
     res.status(401).json({
       success: false,
       error: {
@@ -18,20 +29,6 @@ export function authenticateToken(
     });
     return;
   }
-
-  const parts = authHeader.split(' ');
-  if (parts.length !== 2 || parts[0] !== 'Bearer') {
-    res.status(401).json({
-      success: false,
-      error: {
-        code: 'INVALID_TOKEN_FORMAT',
-        message: 'Authorization header must be formatted as: Bearer <token>'
-      }
-    });
-    return;
-  }
-
-  const token = parts[1];
 
   try {
     const decoded = verifyToken(token);

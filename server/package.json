@@ -10,19 +10,25 @@
     "start": "node dist/server.js",
     "migrate": "tsx src/scripts/migrate.ts",
     "seed:admin": "tsx src/scripts/seed-admin.ts",
-    "test": "tsx src/scripts/test-api.ts"
+    "seed:demo": "tsx src/scripts/reset-demo-data.ts",
+    "test": "tsx src/scripts/test-api.ts",
+    "test:phase4": "tsx src/scripts/test-phase4.ts",
+    "test:phase5": "tsx src/scripts/test-phase5.ts"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "decimal.js": "^10.6.0",
     "dotenv": "^16.4.7",
+    "exceljs": "^4.4.0",
     "express": "^4.21.2",
     "express-rate-limit": "^7.5.0",
     "helmet": "^8.0.0",
     "jsonwebtoken": "^9.0.2",
     "multer": "^1.4.5-lts.2",
+    "pdfkit": "^0.20.2",
     "pg": "^8.13.1",
+    "qrcode": "^1.5.4",
     "sharp": "^0.33.5",
     "tesseract.js": "^6.0.1",
     "zod": "^3.24.2"
@@ -30,12 +36,13 @@
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
     "@types/cors": "^2.8.17",
-    "@types/decimal.js": "^0.0.32",
     "@types/express": "^4.17.21",
     "@types/jsonwebtoken": "^9.0.8",
     "@types/multer": "^1.4.13",
     "@types/node": "^22.13.4",
+    "@types/pdfkit": "^0.17.6",
     "@types/pg": "^8.11.11",
+    "@types/qrcode": "^1.5.6",
     "@types/sharp": "^0.31.1",
     "tsx": "^4.19.3",
     "typescript": "^5.7.3"

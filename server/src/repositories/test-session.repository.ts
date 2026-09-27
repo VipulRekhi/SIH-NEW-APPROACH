@@ -52,11 +52,24 @@ export class TestSessionRepository {
              i.accuracy_class, i.max_capacity, i.min_capacity,
              i.scale_interval, i.verification_scale_interval, i.unit,
              l.name as laboratory_name,
-             u.full_name as technician_name
+             u.full_name as technician_name,
+             u_sub.full_name as submitted_by_name,
+             u_rev.full_name as reviewed_by_name,
+             u_app.full_name as approved_by_name,
+             r.id as report_id, r.report_number, r.public_verification_id,
+             r.overall_status as report_overall_status,
+             r.pdf_path as report_pdf_path,
+             r.certificate_pdf_path,
+             r.detailed_pdf_path,
+             r.excel_path as report_excel_path
       FROM test_sessions ts
       JOIN instruments i ON ts.instrument_id = i.id
       JOIN laboratories l ON ts.laboratory_id = l.id
       JOIN users u ON ts.created_by = u.id
+      LEFT JOIN users u_sub ON ts.submitted_by = u_sub.id
+      LEFT JOIN users u_rev ON ts.reviewed_by = u_rev.id
+      LEFT JOIN users u_app ON ts.approved_by = u_app.id
+      LEFT JOIN reports r ON r.test_session_id = ts.id
       WHERE ts.id = $1
     `;
     const params: any[] = [id];
@@ -80,6 +93,9 @@ export class TestSessionRepository {
   static async list(filter: {
     laboratoryId?: string;
     status?: string;
+    workflowStatus?: string;
+    createdBy?: string;
+    instrumentId?: string;
     search?: string;
     page?: number;
     limit?: number;
@@ -96,6 +112,21 @@ export class TestSessionRepository {
     if (filter.status) {
       conditions.push(`ts.status = $${idx++}`);
       params.push(filter.status);
+    }
+
+    if (filter.workflowStatus) {
+      conditions.push(`ts.workflow_status = $${idx++}`);
+      params.push(filter.workflowStatus);
+    }
+
+    if (filter.createdBy) {
+      conditions.push(`ts.created_by = $${idx++}`);
+      params.push(filter.createdBy);
+    }
+
+    if (filter.instrumentId) {
+      conditions.push(`ts.instrument_id = $${idx++}`);
+      params.push(filter.instrumentId);
     }
 
     if (filter.search) {
@@ -124,12 +155,20 @@ export class TestSessionRepository {
              i.max_capacity, i.unit,
              l.name as laboratory_name,
              u.full_name as technician_name,
+             u_sub.full_name as submitted_by_name,
+             u_rev.full_name as reviewed_by_name,
+             u_app.full_name as approved_by_name,
+             r.report_number, r.public_verification_id, r.overall_status as report_overall_status,
              (SELECT COUNT(*) FROM test_session_tests WHERE test_session_id = ts.id)::int as total_tests,
              (SELECT COUNT(*) FROM test_session_tests WHERE test_session_id = ts.id AND status IN ('PASS', 'FAIL', 'REVIEW_REQUIRED', 'NOT_APPLICABLE'))::int as completed_tests
       FROM test_sessions ts
       JOIN instruments i ON ts.instrument_id = i.id
       JOIN laboratories l ON ts.laboratory_id = l.id
       JOIN users u ON ts.created_by = u.id
+      LEFT JOIN users u_sub ON ts.submitted_by = u_sub.id
+      LEFT JOIN users u_rev ON ts.reviewed_by = u_rev.id
+      LEFT JOIN users u_app ON ts.approved_by = u_app.id
+      LEFT JOIN reports r ON r.test_session_id = ts.id
       ${whereClause}
       ORDER BY ts.created_at DESC
       LIMIT $${idx++} OFFSET $${idx++}
@@ -139,6 +178,93 @@ export class TestSessionRepository {
     const listRes = await query(listSql, params);
 
     return { items: listRes.rows, total };
+  }
+
+  static async updateWorkflow(
+    id: string,
+    updates: {
+      workflowStatus: string;
+      status?: string;
+      submittedAt?: Date | null;
+      submittedBy?: string | null;
+      reviewedAt?: Date | null;
+      reviewedBy?: string | null;
+      reviewerComments?: string | null;
+      rejectionReason?: string | null;
+      returnedAt?: Date | null;
+      approvedAt?: Date | null;
+      approvedBy?: string | null;
+    }
+  ) {
+    const fields: string[] = ['workflow_status = $1'];
+    const params: any[] = [updates.workflowStatus];
+    let idx = 2;
+
+    if (updates.status !== undefined) {
+      fields.push(`status = $${idx++}`);
+      params.push(updates.status);
+    }
+    if (updates.submittedAt !== undefined) {
+      fields.push(`submitted_at = $${idx++}`);
+      params.push(updates.submittedAt);
+    }
+    if (updates.submittedBy !== undefined) {
+      fields.push(`submitted_by = $${idx++}`);
+      params.push(updates.submittedBy);
+    }
+    if (updates.reviewedAt !== undefined) {
+      fields.push(`reviewed_at = $${idx++}`);
+      params.push(updates.reviewedAt);
+    }
+    if (updates.reviewedBy !== undefined) {
+      fields.push(`reviewed_by = $${idx++}`);
+      params.push(updates.reviewedBy);
+    }
+    if (updates.reviewerComments !== undefined) {
+      fields.push(`reviewer_comments = $${idx++}`);
+      params.push(updates.reviewerComments);
+    }
+    if (updates.rejectionReason !== undefined) {
+      fields.push(`rejection_reason = $${idx++}`);
+      params.push(updates.rejectionReason);
+    }
+    if (updates.returnedAt !== undefined) {
+      fields.push(`returned_at = $${idx++}`);
+      params.push(updates.returnedAt);
+    }
+    if (updates.approvedAt !== undefined) {
+      fields.push(`approved_at = $${idx++}`);
+      params.push(updates.approvedAt);
+    }
+    if (updates.approvedBy !== undefined) {
+      fields.push(`approved_by = $${idx++}`);
+      params.push(updates.approvedBy);
+    }
+
+    params.push(id);
+    const sql = `UPDATE test_sessions SET ${fields.join(', ')} WHERE id = $${idx} RETURNING *`;
+    const res = await query(sql, params);
+    return res.rows[0] || null;
+  }
+
+  static async getInstrumentHistory(instrumentId: string) {
+    const res = await query(
+      `SELECT ts.id, ts.session_number, ts.regulatory_mode, ts.regulation_version,
+              ts.test_date, ts.status, ts.workflow_status, ts.created_at,
+              u.full_name as technician_name,
+              u_app.full_name as officer_name,
+              r.id as report_id, r.report_number, r.public_verification_id,
+              r.overall_status as report_overall_status,
+              r.created_at as report_issued_at
+       FROM test_sessions ts
+       JOIN users u ON ts.created_by = u.id
+       LEFT JOIN users u_app ON ts.approved_by = u_app.id
+       LEFT JOIN reports r ON r.test_session_id = ts.id
+       WHERE ts.instrument_id = $1
+       ORDER BY ts.created_at DESC`,
+      [instrumentId]
+    );
+    return res.rows;
   }
 
   static async updateStatus(id: string, status: string, startedAt?: Date, completedAt?: Date) {

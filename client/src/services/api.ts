@@ -28,8 +28,12 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401 && !error.config.url?.includes('/auth/login')) {
       localStorage.removeItem('nawi_token');
-      // If we are not on an auth page, redirect to login
-      if (!window.location.pathname.startsWith('/login') && !window.location.pathname.startsWith('/register')) {
+      // If we are not on an auth or public verification page, redirect to login
+      if (
+        !window.location.pathname.startsWith('/login') &&
+        !window.location.pathname.startsWith('/register') &&
+        !window.location.pathname.startsWith('/public/')
+      ) {
         window.location.href = '/login';
       }
     }

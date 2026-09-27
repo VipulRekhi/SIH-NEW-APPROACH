@@ -1,5 +1,5 @@
 import { RuleEvaluationResult, TestComplianceStatus } from './calculation.types.js';
-import { MpeCalculator } from './mpe.calculator.ts';
+import { MpeCalculator } from './mpe.calculator.js';
 import { DecimalUtils, Decimal } from './decimal.utils.js';
 
 export interface TareTestInput {

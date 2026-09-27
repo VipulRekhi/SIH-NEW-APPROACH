@@ -22,6 +22,7 @@ export class TestSessionService {
 
   static async listSessions(params?: {
     status?: string;
+    workflow_status?: string;
     search?: string;
     page?: number;
     limit?: number;
@@ -120,4 +121,43 @@ export class TestSessionService {
     const res = await api.post(`/test-sessions/${sessionId}/evaluate`);
     return res.data.data;
   }
+
+  static async deleteTestData(
+    sessionId: string,
+    testId: string
+  ): Promise<{ message: string; testSessionTestId: string; evaluation: any; tests: TestSessionTest[] }> {
+    const res = await api.delete(`/test-sessions/${sessionId}/tests/${testId}`);
+    return res.data.data;
+  }
+
+  static async submitForReview(sessionId: string): Promise<{ message: string; session: TestSession }> {
+    const res = await api.post(`/test-sessions/${sessionId}/submit`);
+    return res.data.data;
+  }
+
+  static async startReview(sessionId: string): Promise<{ message: string; session: TestSession }> {
+    const res = await api.post(`/test-sessions/${sessionId}/start-review`);
+    return res.data.data;
+  }
+
+  static async returnForCorrection(sessionId: string, reviewerComments: string): Promise<{ message: string; session: TestSession }> {
+    const res = await api.post(`/test-sessions/${sessionId}/return`, { reviewerComments });
+    return res.data.data;
+  }
+
+  static async rejectSession(sessionId: string, rejectionReason: string): Promise<{ message: string; session: TestSession }> {
+    const res = await api.post(`/test-sessions/${sessionId}/reject`, { rejectionReason });
+    return res.data.data;
+  }
+
+  static async approveSession(sessionId: string, reviewerComments?: string): Promise<{ message: string; session: TestSession; evaluation: any }> {
+    const res = await api.post(`/test-sessions/${sessionId}/approve`, { reviewerComments });
+    return res.data.data;
+  }
+
+  static async deleteSession(sessionId: string): Promise<void> {
+    await api.delete(`/test-sessions/${sessionId}`);
+  }
 }
+
+

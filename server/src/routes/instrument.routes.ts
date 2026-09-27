@@ -16,11 +16,13 @@ router.get('/:id/files/:fileId/view', authenticateToken, InstrumentController.vi
 router.post('/', authenticateToken, validateBody(createInstrumentSchema), InstrumentController.createInstrument);
 router.get('/', authenticateToken, InstrumentController.listInstruments);
 router.get('/:id', authenticateToken, InstrumentController.getInstrument);
+router.get('/:id/history', authenticateToken, InstrumentController.getInstrumentHistory);
 router.put('/:id', authenticateToken, validateBody(updateInstrumentSchema), InstrumentController.updateInstrument);
+router.delete('/:id', authenticateToken, InstrumentController.deleteInstrument);
 router.patch('/:id/status', authenticateToken, authorizeRoles('admin', 'officer'), validateBody(updateStatusSchema), InstrumentController.updateStatus);
 
 // File attachments for an instrument
 router.post('/:id/files', authenticateToken, uploadSingleImage, InstrumentController.uploadFile);
-router.delete('/:id/files/:fileId', authenticateToken, authorizeRoles('admin', 'officer'), InstrumentController.deleteFile);
+router.delete('/:id/files/:fileId', authenticateToken, authorizeRoles('admin', 'officer', 'technician'), InstrumentController.deleteFile);
 
 export default router;

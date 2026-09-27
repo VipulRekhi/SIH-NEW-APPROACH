@@ -1,5 +1,5 @@
 import { RepeatabilityInput, RepeatabilityResult, RuleEvaluationResult } from './calculation.types.js';
-import { MpeCalculator } from './mpe.calculator.ts';
+import { MpeCalculator } from './mpe.calculator.js';
 import { DecimalUtils, Decimal } from './decimal.utils.js';
 
 export class RepeatabilityCalculator {
@@ -57,13 +57,14 @@ export class RepeatabilityCalculator {
     const rangeDiffDec = DecimalUtils.sub(maxDec, minDec);
     const passesTolerance = DecimalUtils.lte(rangeDiffDec, mpeLimitDec);
 
-    // If fewer readings than mandated by R-76, must flag REVIEW_REQUIRED rather than unconditional PASS
+    // If tolerance exceeded, the test has metrologically FAILED (defects cannot be masked by REVIEW_REQUIRED)
+    // If tolerance passed but fewer readings recorded than mandated, flag REVIEW_REQUIRED
     const hasSufficientReadings = input.readings.length >= requiredCount;
-    const finalStatus = !hasSufficientReadings
-      ? 'REVIEW_REQUIRED'
-      : passesTolerance
-        ? 'PASS'
-        : 'FAIL';
+    const finalStatus = !passesTolerance
+      ? 'FAIL'
+      : !hasSufficientReadings
+        ? 'REVIEW_REQUIRED'
+        : 'PASS';
 
     const evaluation: RuleEvaluationResult = {
       ruleId: 'R76-3.6.1-A.4.10',
@@ -98,11 +99,11 @@ export class RepeatabilityCalculator {
         hasSufficientReadings
       },
       status: finalStatus,
-      explanation: !hasSufficientReadings
-        ? `Readings count (${input.readings.length}) is below OIML R-76 mandated count of ${requiredCount} for ${input.regulatoryMode} (Max = ${input.maxCapacity} ${input.unit}). Review required.`
-        : passesTolerance
-          ? `Difference between repeated weighings Delta_I = ${DecimalUtils.format(rangeDiffDec, 4)} ${input.unit} does not exceed applicable MPE = ${DecimalUtils.format(mpeLimitDec, 4)} ${input.unit}.`
-          : `Difference between repeated weighings Delta_I = ${DecimalUtils.format(rangeDiffDec, 4)} ${input.unit} exceeds applicable MPE = ${DecimalUtils.format(mpeLimitDec, 4)} ${input.unit}.`
+      explanation: !passesTolerance
+        ? `Difference between repeated weighings Delta_I = ${DecimalUtils.format(rangeDiffDec, 4)} ${input.unit} exceeds applicable MPE = ${DecimalUtils.format(mpeLimitDec, 4)} ${input.unit}. Result: NON-COMPLIANT (FAILED).`
+        : !hasSufficientReadings
+          ? `Readings count (${input.readings.length}) is below OIML R-76 mandated count of ${requiredCount} for ${input.regulatoryMode} (Max = ${input.maxCapacity} ${input.unit}). Tolerance met for entered readings, but manual technician review required.`
+          : `Difference between repeated weighings Delta_I = ${DecimalUtils.format(rangeDiffDec, 4)} ${input.unit} does not exceed applicable MPE = ${DecimalUtils.format(mpeLimitDec, 4)} ${input.unit}.`
     };
 
     return {

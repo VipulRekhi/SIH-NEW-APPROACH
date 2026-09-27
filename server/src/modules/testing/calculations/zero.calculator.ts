@@ -1,5 +1,5 @@
 import { ZeroSettingInput, ZeroSettingResult, RuleEvaluationResult } from './calculation.types.js';
-import { ChangeoverCalculator } from './changeover.calculator.ts';
+import { ChangeoverCalculator } from './changeover.calculator.js';
 import { DecimalUtils, Decimal } from './decimal.utils.js';
 
 export class ZeroCalculator {

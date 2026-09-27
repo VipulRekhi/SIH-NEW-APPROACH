@@ -6,6 +6,12 @@ import {
   ApplicabilityEvaluationResult
 } from './applicability.types.js';
 
+function parseTriState(val: any): 'YES' | 'NO' | 'UNKNOWN' {
+  if (val === true || val === 'YES' || val === 'yes') return 'YES';
+  if (val === false || val === 'NO' || val === 'no') return 'NO';
+  return 'UNKNOWN';
+}
+
 export class ApplicabilityRules {
   /**
    * Evaluates the applicability of a test type code given the instrument's verified characteristics.
@@ -118,25 +124,33 @@ export class ApplicabilityRules {
 
       // 6. MULTIPLE INDICATING DEVICES (Clause 3.6.3)
       case 'MULTIPLE_INDICATING_DEVICES': {
-        if (cfg.hasMultipleIndicators === true || cfg.hasRemoteDisplay === true || cfg.hasPrinter === true) {
+        const auxState = parseTriState(cfg.auxiliary_indicating_devices ?? cfg.hasMultipleIndicators);
+        const remoteState = parseTriState(cfg.remote_display ?? cfg.hasRemoteDisplay);
+        const printerState = parseTriState(cfg.printer ?? cfg.hasPrinter);
+
+        // If any indicating device is explicitly YES -> APPLICABLE
+        if (auxState === 'YES' || remoteState === 'YES' || printerState === 'YES') {
           return {
             testCode,
             applicability: 'APPLICABLE',
-            reason: 'Applicable: verified instrument configuration includes secondary indicator, remote display, or physical printer output.',
+            reason: 'Applicable: verified instrument configuration includes secondary indicator, remote display, or physical printer output (Clause 3.6.3).',
             ruleId: 'R76-3.6.3',
             clause: 'Clause 3.6.3'
           };
         }
-        if (cfg.hasMultipleIndicators === false && !cfg.hasRemoteDisplay && !cfg.hasPrinter) {
+
+        // If all relevant devices are explicitly NO -> NOT_APPLICABLE
+        if (auxState === 'NO' && remoteState === 'NO' && printerState === 'NO') {
           return {
             testCode,
             applicability: 'NOT_APPLICABLE',
-            reason: 'This test is not applicable because the verified instrument configuration does not contain the relevant additional indicating device.',
+            reason: 'This test is not applicable because the verified instrument configuration explicitly specifies no auxiliary indicating devices, remote displays, or printers are present (Clause 3.6.3).',
             ruleId: 'R76-3.6.3',
             clause: 'Clause 3.6.3'
           };
         }
-        // Insufficient configuration data
+
+        // Insufficient configuration data -> REVIEW_REQUIRED
         return {
           testCode,
           applicability: 'REVIEW_REQUIRED',
@@ -148,7 +162,8 @@ export class ApplicabilityRules {
 
       // 7. DIFFERENT POSITIONS OF EQUILIBRIUM (Clause 3.6.4)
       case 'DIFFERENT_POSITIONS_OF_EQUILIBRIUM': {
-        if (cfg.hasEquilibriumExtension === true) {
+        const eqState = parseTriState(cfg.hasEquilibriumExtension ?? cfg.equilibrium_extension);
+        if (eqState === 'YES') {
           return {
             testCode,
             applicability: 'APPLICABLE',
@@ -157,16 +172,16 @@ export class ApplicabilityRules {
             clause: 'Clause 3.6.4'
           };
         }
-        if (cfg.hasEquilibriumExtension === false) {
+        if (eqState === 'NO') {
           return {
             testCode,
             applicability: 'NOT_APPLICABLE',
-            reason: 'This test is not applicable because the verified instrument does not feature devices extending self-indication capacity.',
+            reason: 'This test is not applicable because the verified instrument does not feature devices extending self-indication capacity (Clause 3.6.4).',
             ruleId: 'R76-3.6.4',
             clause: 'Clause 3.6.4'
           };
         }
-        // Insufficient configuration data
+        // Insufficient configuration data -> REVIEW_REQUIRED
         return {
           testCode,
           applicability: 'REVIEW_REQUIRED',

@@ -193,7 +193,7 @@ export const CreateTestSessionPage: React.FC = () => {
               Step 1: Verified Instrument Selection & Metrological Validation
             </h3>
             <p className="text-xs text-slate-500 mt-0.5">
-              Select an instrument verified in Phase 2. Technical parameters are validated against OIML R-76 Clause 3.4.2 before testing begins.
+              Select an instrument registered in the laboratory registry. Technical parameters are validated against OIML R-76 Clause 3.4.2 before testing begins.
             </p>
           </div>
 

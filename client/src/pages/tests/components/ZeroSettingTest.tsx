@@ -14,10 +14,11 @@ interface Props {
   test: TestSessionTest;
   unit: string;
   verificationIntervalE: number;
+  readOnly?: boolean;
   onUpdated: () => void;
 }
 
-export const ZeroSettingTest: React.FC<Props> = ({ sessionId, test, unit, verificationIntervalE, onUpdated }) => {
+export const ZeroSettingTest: React.FC<Props> = ({ sessionId, test, unit, verificationIntervalE, readOnly = false, onUpdated }) => {
   const [observations, setObservations] = useState<TestObservation[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [calculating, setCalculating] = useState<boolean>(false);
@@ -159,9 +160,10 @@ export const ZeroSettingTest: React.FC<Props> = ({ sessionId, test, unit, verifi
                 type="number"
                 step="any"
                 required
+                disabled={readOnly}
                 value={initialIndication}
                 onChange={(e) => setInitialIndication(e.target.value)}
-                className="w-full border border-slate-300 rounded p-2 bg-white font-mono"
+                className="w-full border border-slate-300 rounded p-2 bg-white font-mono disabled:bg-slate-100 disabled:text-slate-600"
               />
             </div>
 
@@ -173,9 +175,10 @@ export const ZeroSettingTest: React.FC<Props> = ({ sessionId, test, unit, verifi
                 type="number"
                 step="any"
                 required
+                disabled={readOnly}
                 value={finalIndication}
                 onChange={(e) => setFinalIndication(e.target.value)}
-                className="w-full border border-slate-300 rounded p-2 bg-white font-mono"
+                className="w-full border border-slate-300 rounded p-2 bg-white font-mono disabled:bg-slate-100 disabled:text-slate-600"
               />
             </div>
 
@@ -186,10 +189,11 @@ export const ZeroSettingTest: React.FC<Props> = ({ sessionId, test, unit, verifi
               <input
                 type="number"
                 step="any"
+                disabled={readOnly}
                 value={additionalLoad}
                 onChange={(e) => setAdditionalLoad(e.target.value)}
                 placeholder="Optional turning weights"
-                className="w-full border border-slate-300 rounded p-2 bg-white font-mono"
+                className="w-full border border-slate-300 rounded p-2 bg-white font-mono disabled:bg-slate-100 disabled:text-slate-600"
               />
             </div>
           </div>
@@ -200,10 +204,11 @@ export const ZeroSettingTest: React.FC<Props> = ({ sessionId, test, unit, verifi
             </label>
             <input
               type="text"
+              disabled={readOnly}
               value={remarks}
               onChange={(e) => setRemarks(e.target.value)}
               placeholder="e.g. Non-automatic zero button actuated; zero annunciator illuminated"
-              className="w-full border border-slate-300 rounded p-2 bg-white"
+              className="w-full border border-slate-300 rounded p-2 bg-white disabled:bg-slate-100 disabled:text-slate-600"
             />
           </div>
 
@@ -224,16 +229,18 @@ export const ZeroSettingTest: React.FC<Props> = ({ sessionId, test, unit, verifi
             )}
           </div>
 
-          <div className="flex justify-end pt-2">
-            <button
-              type="submit"
-              disabled={calculating}
-              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold uppercase tracking-wider text-white bg-blue-700 hover:bg-blue-800 disabled:opacity-50 rounded shadow-xs transition-colors"
-            >
-              <Play className="w-3.5 h-3.5 fill-current" />
-              <span>{calculating ? 'Evaluating...' : 'Evaluate Zero-Setting Accuracy'}</span>
-            </button>
-          </div>
+          {!readOnly && (
+            <div className="flex justify-end pt-2">
+              <button
+                type="submit"
+                disabled={calculating}
+                className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold uppercase tracking-wider text-white bg-blue-700 hover:bg-blue-800 disabled:opacity-50 rounded shadow-xs transition-colors"
+              >
+                <Play className="w-3.5 h-3.5 fill-current" />
+                <span>{calculating ? 'Evaluating...' : 'Evaluate Zero-Setting Accuracy'}</span>
+              </button>
+            </div>
+          )}
         </form>
       </div>
     </div>

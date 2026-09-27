@@ -91,7 +91,7 @@ export const InstrumentListPage: React.FC = () => {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800 uppercase tracking-wide">
-              Phase 2 Active
+              Active Registry
             </span>
             <span className="text-xs text-slate-500 font-mono">
               OIML R-76 Instrument Registry
@@ -318,7 +318,7 @@ export const InstrumentListPage: React.FC = () => {
       <div className="p-3 bg-slate-100 rounded border border-slate-200 flex items-center gap-2 text-xs text-slate-600">
         <Building2 className="w-4 h-4 text-slate-500 flex-shrink-0" />
         <span>
-          Instruments registered here are isolated by accredited laboratory and will serve as direct inputs for OIML R-76 calibration testing in Phase 3.
+          Instruments registered here are isolated by accredited laboratory and will serve as direct inputs for OIML R-76 calibration testing and verification.
         </span>
       </div>
     </div>

@@ -16,10 +16,11 @@ interface Props {
   test: TestSessionTest;
   unit: string;
   maxCapacity: number;
+  readOnly?: boolean;
   onUpdated: () => void;
 }
 
-export const RepeatabilityTest: React.FC<Props> = ({ sessionId, test, unit, maxCapacity, onUpdated }) => {
+export const RepeatabilityTest: React.FC<Props> = ({ sessionId, test, unit, maxCapacity, readOnly = false, onUpdated }) => {
   const [observations, setObservations] = useState<TestObservation[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [calculating, setCalculating] = useState<boolean>(false);
@@ -128,15 +129,17 @@ export const RepeatabilityTest: React.FC<Props> = ({ sessionId, test, unit, maxC
           </p>
         </div>
 
-        <button
-          type="button"
-          disabled={observations.length === 0 || calculating}
-          onClick={handleRunCalculation}
-          className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold uppercase tracking-wider text-white bg-blue-700 hover:bg-blue-800 disabled:opacity-50 rounded shadow-xs transition-colors"
-        >
-          <Play className="w-3.5 h-3.5 fill-current" />
-          <span>{calculating ? 'Calculating...' : 'Run Calculation'}</span>
-        </button>
+        {!readOnly && (
+          <button
+            type="button"
+            disabled={observations.length === 0 || calculating}
+            onClick={handleRunCalculation}
+            className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold uppercase tracking-wider text-white bg-blue-700 hover:bg-blue-800 disabled:opacity-50 rounded shadow-xs transition-colors"
+          >
+            <Play className="w-3.5 h-3.5 fill-current" />
+            <span>{calculating ? 'Calculating...' : 'Run Calculation'}</span>
+          </button>
+        )}
       </div>
 
       {error && (
@@ -203,53 +206,55 @@ export const RepeatabilityTest: React.FC<Props> = ({ sessionId, test, unit, maxC
       )}
 
       {/* Add Reading Form */}
-      <div className="bg-white border border-slate-200 rounded-lg p-4 shadow-xs">
-        <div className="text-xs font-bold text-slate-900 uppercase tracking-wide mb-3 flex items-center gap-1.5">
-          <Plus className="w-4 h-4 text-blue-700" />
-          <span>Record Repeat Observation Reading</span>
+      {!readOnly && (
+        <div className="bg-white border border-slate-200 rounded-lg p-4 shadow-xs">
+          <div className="text-xs font-bold text-slate-900 uppercase tracking-wide mb-3 flex items-center gap-1.5">
+            <Plus className="w-4 h-4 text-blue-700" />
+            <span>Record Repeat Observation Reading</span>
+          </div>
+
+          <form onSubmit={handleAddReading} className="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs">
+            <div>
+              <label className="text-slate-500 block mb-1">Constant Test Load ({unit}):</label>
+              <input
+                type="number"
+                step="any"
+                required
+                value={testLoad}
+                onChange={(e) => setTestLoad(e.target.value)}
+                placeholder="e.g. 15"
+                className="w-full border border-slate-300 rounded p-1.5 bg-white font-mono"
+              />
+            </div>
+
+            <div>
+              <label className="text-slate-500 block mb-1">
+                Reading #{observations.length + 1} Indication ({unit}):
+              </label>
+              <input
+                type="number"
+                step="any"
+                required
+                autoFocus
+                value={readingValue}
+                onChange={(e) => setReadingValue(e.target.value)}
+                placeholder="e.g. 15.000"
+                className="w-full border border-slate-300 rounded p-1.5 bg-white font-mono"
+              />
+            </div>
+
+            <div className="flex items-end">
+              <button
+                type="submit"
+                className="w-full inline-flex items-center justify-center gap-1.5 py-1.5 px-3 bg-blue-700 hover:bg-blue-800 text-white rounded font-semibold text-xs transition-colors"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Record Reading #{observations.length + 1}</span>
+              </button>
+            </div>
+          </form>
         </div>
-
-        <form onSubmit={handleAddReading} className="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs">
-          <div>
-            <label className="text-slate-500 block mb-1">Constant Test Load ({unit}):</label>
-            <input
-              type="number"
-              step="any"
-              required
-              value={testLoad}
-              onChange={(e) => setTestLoad(e.target.value)}
-              placeholder="e.g. 15"
-              className="w-full border border-slate-300 rounded p-1.5 bg-white font-mono"
-            />
-          </div>
-
-          <div>
-            <label className="text-slate-500 block mb-1">
-              Reading #{observations.length + 1} Indication ({unit}):
-            </label>
-            <input
-              type="number"
-              step="any"
-              required
-              autoFocus
-              value={readingValue}
-              onChange={(e) => setReadingValue(e.target.value)}
-              placeholder="e.g. 15.000"
-              className="w-full border border-slate-300 rounded p-1.5 bg-white font-mono"
-            />
-          </div>
-
-          <div className="flex items-end">
-            <button
-              type="submit"
-              className="w-full inline-flex items-center justify-center gap-1.5 py-1.5 px-3 bg-blue-700 hover:bg-blue-800 text-white rounded font-semibold text-xs transition-colors"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Record Reading #{observations.length + 1}</span>
-            </button>
-          </div>
-        </form>
-      </div>
+      )}
 
       {/* Readings Table */}
       <div className="bg-white border border-slate-200 rounded-lg shadow-xs overflow-hidden">
@@ -269,13 +274,13 @@ export const RepeatabilityTest: React.FC<Props> = ({ sessionId, test, unit, maxC
               <th className="px-3 py-2.5">Test Load</th>
               <th className="px-3 py-2.5">Indicated Value (I)</th>
               <th className="px-3 py-2.5">Timestamp</th>
-              <th className="px-3 py-2.5 text-right font-sans">Action</th>
+              {!readOnly && <th className="px-3 py-2.5 text-right font-sans">Action</th>}
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-200">
             {observations.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-slate-400 font-sans">
+                <td colSpan={readOnly ? 4 : 5} className="px-4 py-8 text-center text-slate-400 font-sans">
                   No repeated readings recorded yet.
                 </td>
               </tr>
@@ -288,16 +293,18 @@ export const RepeatabilityTest: React.FC<Props> = ({ sessionId, test, unit, maxC
                   <td className="px-3 py-2 text-slate-400 text-[11px] font-sans">
                     {new Date(obs.created_at).toLocaleTimeString()}
                   </td>
-                  <td className="px-3 py-2 text-right font-sans">
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteReading(obs.id)}
-                      className="p-1 text-slate-400 hover:text-red-700 transition-colors"
-                      title="Delete reading"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </td>
+                  {!readOnly && (
+                    <td className="px-3 py-2 text-right font-sans">
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteReading(obs.id)}
+                        className="p-1 text-slate-400 hover:text-red-700 transition-colors"
+                        title="Delete reading"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))
             )}

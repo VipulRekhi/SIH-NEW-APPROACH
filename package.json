@@ -10,7 +10,8 @@
     "build": "npm run build --prefix server && npm run build --prefix client",
     "migrate": "npm run migrate --prefix server",
     "seed:admin": "npm run seed:admin --prefix server",
-    "test:server": "npm run test --prefix server"
+    "test:server": "npm run test --prefix server",
+    "test:phase4": "npm run test:phase4 --prefix server"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"

@@ -1,4 +1,5 @@
 import { Decimal } from 'decimal.js';
+export { Decimal };
 
 // Configure standard legal metrology decimal precision
 Decimal.set({
@@ -76,5 +77,3 @@ export class DecimalUtils {
     return d.toString();
   }
 }
-
-export { Decimal };

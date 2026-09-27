@@ -66,4 +66,22 @@ export class UserRepository {
     );
     return res.rows;
   }
+
+  static async updateStatus(id: string, isActive: boolean): Promise<SafeUser | null> {
+    const res = await query(
+      `UPDATE users SET is_active = $1, updated_at = NOW() WHERE id = $2 RETURNING id`,
+      [isActive, id]
+    );
+    if (!res.rows[0]) return null;
+    return this.findByIdSafe(id);
+  }
+
+  static async updateRole(id: string, roleId: number): Promise<SafeUser | null> {
+    const res = await query(
+      `UPDATE users SET role_id = $1, updated_at = NOW() WHERE id = $2 RETURNING id`,
+      [roleId, id]
+    );
+    if (!res.rows[0]) return null;
+    return this.findByIdSafe(id);
+  }
 }

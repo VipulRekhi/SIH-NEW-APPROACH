@@ -1,5 +1,5 @@
 import { DiscriminationInput, DiscriminationResult, RuleEvaluationResult } from './calculation.types.js';
-import { MpeCalculator } from './mpe.calculator.ts';
+import { MpeCalculator } from './mpe.calculator.js';
 import { DecimalUtils, Decimal } from './decimal.utils.js';
 
 export class DiscriminationCalculator {
@@ -46,18 +46,24 @@ export class DiscriminationCalculator {
   }
 
   static calculate(input: DiscriminationInput): DiscriminationResult {
-    const dDec = DecimalUtils.from(input.d);
-    const initialIndDec = DecimalUtils.from(input.indication);
-    const resultingIndDec = DecimalUtils.from(input.resultingIndication);
+    // 1. Defensive input parsing & sanity validation
+    const dDec = DecimalUtils.from(input.d || 0.001);
+    const initialIndDec = DecimalUtils.from(input.indication || 0);
+    const resultingIndDec = DecimalUtils.from(input.resultingIndication || 0);
+    const testLoadDec = DecimalUtils.from(input.testLoad || 0);
 
     const { addedLoad, ruleId, clause, formula } = this.getRequiredAddedLoad(
-      input.indicationType,
+      input.indicationType || 'digital',
       dDec,
-      input.e,
-      input.testLoad,
+      input.e || input.d || 0.001,
+      testLoadDec,
       input.accuracyClass,
       input.regulatoryMode
     );
+
+    const actualAddedLoadDec = input.addedLoad !== undefined && input.addedLoad !== null
+      ? DecimalUtils.from(input.addedLoad)
+      : addedLoad;
 
     // Observed change in indication
     const observedChangeDec = DecimalUtils.abs(DecimalUtils.sub(resultingIndDec, initialIndDec));
@@ -73,30 +79,39 @@ export class DiscriminationCalculator {
     let isCompliant = false;
     let explanation = '';
 
+    // Physical sanity validation:
+    // e.g. resulting indication cannot jump by huge erratic amounts (like 100 kg when test load is 20 kg)
+    const maxCredibleJump = DecimalUtils.mul(dDec, 5); // Cannot jump more than 5d on a 1.4d addition
+    const actualJump = DecimalUtils.abs(DecimalUtils.sub(resultingIndDec, initialIndDec));
+
     if (input.indicationType === 'digital') {
       // Step condition: Indication must increase to exactly I + d
-      // Tolerance: within 0.1d to account for minor rounding/floating display step
-      const stepTolerance = DecimalUtils.mul(dDec, '0.1');
+      // Tolerance: within 0.15d to account for rounding/floating display step
+      const stepTolerance = DecimalUtils.mul(dDec, '0.15');
 
       if (DecimalUtils.eq(resultingIndDec, initialIndDec)) {
         isCompliant = false;
-        explanation = `Addition of 1.4d test load (${DecimalUtils.format(input.addedLoad || addedLoad, 4)} ${input.unit}) produced NO CHANGE in indication. Failed discrimination threshold.`;
+        explanation = `Addition of 1.4d test load (${DecimalUtils.format(actualAddedLoadDec, 4)} ${input.unit}) produced NO CHANGE in indication. Failed discrimination threshold.`;
       } else if (DecimalUtils.lt(resultingIndDec, initialIndDec)) {
         isCompliant = false;
         explanation = `INVALID OBSERVATION: Resulting indication (${DecimalUtils.format(resultingIndDec, 4)} ${input.unit}) is less than initial indication (${DecimalUtils.format(initialIndDec, 4)} ${input.unit}).`;
+      } else if (DecimalUtils.gt(actualJump, maxCredibleJump)) {
+        // Physical erratic jump (e.g. 100 kg on 20 kg load)
+        isCompliant = false;
+        explanation = `PHYSICAL INCONSISTENCY / FAIL: Resulting indication (${DecimalUtils.format(resultingIndDec, 4)} ${input.unit}) jumped excessively by ${DecimalUtils.format(actualJump, 4)} ${input.unit}. Expected I + d = ${DecimalUtils.format(expectedIndDec, 4)} ${input.unit}. This is not a valid discrimination response.`;
       } else if (DecimalUtils.lte(deviationFromExpectedDec, stepTolerance)) {
         isCompliant = true;
-        explanation = `Addition of 1.4d extra load (${DecimalUtils.format(input.addedLoad || addedLoad, 4)} ${input.unit}) produced the mandated indication step of exactly I + d = ${DecimalUtils.format(expectedIndDec, 4)} ${input.unit}.`;
+        explanation = `Addition of 1.4d extra load (${DecimalUtils.format(actualAddedLoadDec, 4)} ${input.unit}) produced the mandated indication step of exactly I + d = ${DecimalUtils.format(expectedIndDec, 4)} ${input.unit}.`;
       } else {
-        // Did not step to I + d (e.g. jumped to 100 kg when 20.005 kg expected)
+        // Did not step to I + d
         isCompliant = false;
-        explanation = `NON-COMPLIANT / INVALID OBSERVATION: Observed resulting indication (${DecimalUtils.format(resultingIndDec, 4)} ${input.unit}) does not satisfy the required I + d condition (expected ${DecimalUtils.format(expectedIndDec, 4)} ${input.unit} per OIML R 76-1:2006 A.4.8.2). Deviation = ${DecimalUtils.format(deviationFromExpectedDec, 4)} ${input.unit}.`;
+        explanation = `NON-COMPLIANT: Observed resulting indication (${DecimalUtils.format(resultingIndDec, 4)} ${input.unit}) does not satisfy the required I + d condition (expected ${DecimalUtils.format(expectedIndDec, 4)} ${input.unit} per OIML R 76-1:2006 A.4.8.2). Deviation = ${DecimalUtils.format(deviationFromExpectedDec, 4)} ${input.unit}.`;
       }
     } else {
       // Analog or non-self indicating
       isCompliant = DecimalUtils.gte(observedChangeDec, requiredChangeDec);
       explanation = isCompliant
-        ? `Addition of test load (${DecimalUtils.format(input.addedLoad || addedLoad, 4)} ${input.unit}) produced required visible displacement of ${DecimalUtils.format(observedChangeDec, 4)} ${input.unit}.`
+        ? `Addition of test load (${DecimalUtils.format(actualAddedLoadDec, 4)} ${input.unit}) produced required visible displacement of ${DecimalUtils.format(observedChangeDec, 4)} ${input.unit}.`
         : `Addition of test load failed to produce the required visible displacement.`;
     }
 
@@ -107,9 +122,9 @@ export class DiscriminationCalculator {
       clause,
       annexClause: 'A.4.8.2',
       inputs: {
-        testLoad: input.testLoad,
+        testLoad: DecimalUtils.toNumber(testLoadDec),
         initialIndication: DecimalUtils.toNumber(initialIndDec),
-        addedLoad: DecimalUtils.toNumber(DecimalUtils.from(input.addedLoad || addedLoad)),
+        addedLoad: DecimalUtils.toNumber(actualAddedLoadDec),
         resultingIndication: DecimalUtils.toNumber(resultingIndDec),
         d: DecimalUtils.toNumber(dDec),
         unit: input.unit,
@@ -142,9 +157,9 @@ export class DiscriminationCalculator {
     };
 
     return {
-      testLoad: input.testLoad,
+      testLoad: DecimalUtils.toNumber(testLoadDec),
       initialIndication: DecimalUtils.toNumber(initialIndDec),
-      addedLoad: DecimalUtils.toNumber(DecimalUtils.from(input.addedLoad || addedLoad)),
+      addedLoad: DecimalUtils.toNumber(actualAddedLoadDec),
       resultingIndication: DecimalUtils.toNumber(resultingIndDec),
       expectedIndication: DecimalUtils.toNumber(expectedIndDec),
       deviationFromExpected: DecimalUtils.toNumber(deviationFromExpectedDec),

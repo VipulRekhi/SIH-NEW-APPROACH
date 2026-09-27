@@ -15,6 +15,7 @@ export interface CreateInstrumentData {
   unit: string;
   status?: InstrumentStatus;
   notes?: string | null;
+  deviceConfiguration?: any;
   createdBy: string;
 }
 
@@ -31,6 +32,7 @@ export interface UpdateInstrumentData {
   unit?: string;
   status?: InstrumentStatus;
   notes?: string | null;
+  deviceConfiguration?: any;
 }
 
 export interface InstrumentFilter {
@@ -48,11 +50,11 @@ export class InstrumentRepository {
       `INSERT INTO instruments (
         laboratory_id, manufacturer, model_number, serial_number, instrument_type,
         accuracy_class, max_capacity, min_capacity, scale_interval, verification_scale_interval,
-        unit, status, notes, created_by
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+        unit, status, notes, device_configuration, created_by
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
       RETURNING id, laboratory_id, manufacturer, model_number, serial_number, instrument_type,
                 accuracy_class, max_capacity, min_capacity, scale_interval, verification_scale_interval,
-                unit, status, notes, created_by, created_at, updated_at`,
+                unit, status, notes, device_configuration, created_by, created_at, updated_at`,
       [
         data.laboratoryId,
         data.manufacturer.trim(),
@@ -67,6 +69,7 @@ export class InstrumentRepository {
         data.unit.trim().toLowerCase(),
         data.status || 'ACTIVE',
         data.notes || null,
+        JSON.stringify(data.deviceConfiguration || {}),
         data.createdBy
       ]
     );
@@ -166,6 +169,10 @@ export class InstrumentRepository {
     if (data.notes !== undefined) {
       fields.push(`notes = $${idx++}`);
       values.push(data.notes || null);
+    }
+    if (data.deviceConfiguration !== undefined) {
+      fields.push(`device_configuration = $${idx++}`);
+      values.push(JSON.stringify(data.deviceConfiguration));
     }
 
     if (fields.length === 0) {

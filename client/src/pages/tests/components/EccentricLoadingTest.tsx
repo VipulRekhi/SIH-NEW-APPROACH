@@ -15,10 +15,11 @@ interface Props {
   test: TestSessionTest;
   unit: string;
   maxCapacity: number;
+  readOnly?: boolean;
   onUpdated: () => void;
 }
 
-export const EccentricLoadingTest: React.FC<Props> = ({ sessionId, test, unit, maxCapacity, onUpdated }) => {
+export const EccentricLoadingTest: React.FC<Props> = ({ sessionId, test, unit, maxCapacity, readOnly = false, onUpdated }) => {
   const [observations, setObservations] = useState<TestObservation[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [calculating, setCalculating] = useState<boolean>(false);
@@ -148,15 +149,17 @@ export const EccentricLoadingTest: React.FC<Props> = ({ sessionId, test, unit, m
           </p>
         </div>
 
-        <button
-          type="button"
-          disabled={observations.length === 0 || calculating}
-          onClick={handleRunCalculation}
-          className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold uppercase tracking-wider text-white bg-blue-700 hover:bg-blue-800 disabled:opacity-50 rounded shadow-xs transition-colors"
-        >
-          <Play className="w-3.5 h-3.5 fill-current" />
-          <span>{calculating ? 'Calculating...' : 'Run Calculation'}</span>
-        </button>
+        {!readOnly && (
+          <button
+            type="button"
+            disabled={observations.length === 0 || calculating}
+            onClick={handleRunCalculation}
+            className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold uppercase tracking-wider text-white bg-blue-700 hover:bg-blue-800 disabled:opacity-50 rounded shadow-xs transition-colors"
+          >
+            <Play className="w-3.5 h-3.5 fill-current" />
+            <span>{calculating ? 'Calculating...' : 'Run Calculation'}</span>
+          </button>
+        )}
       </div>
 
       {error && (
@@ -175,75 +178,77 @@ export const EccentricLoadingTest: React.FC<Props> = ({ sessionId, test, unit, m
       </div>
 
       {/* Add Observation Form */}
-      <div className="bg-white border border-slate-200 rounded-lg p-4 shadow-xs">
-        <div className="text-xs font-bold text-slate-900 uppercase tracking-wide mb-3 flex items-center gap-1.5">
-          <Plus className="w-4 h-4 text-blue-700" />
-          <span>Record Position Observation</span>
+      {!readOnly && (
+        <div className="bg-white border border-slate-200 rounded-lg p-4 shadow-xs">
+          <div className="text-xs font-bold text-slate-900 uppercase tracking-wide mb-3 flex items-center gap-1.5">
+            <Plus className="w-4 h-4 text-blue-700" />
+            <span>Record Position Observation</span>
+          </div>
+
+          <form onSubmit={handleAddReading} className="grid grid-cols-1 md:grid-cols-5 gap-3 text-xs">
+            <div>
+              <label className="text-slate-500 block mb-1">Load Position:</label>
+              <select
+                value={position}
+                onChange={(e) => setPosition(e.target.value)}
+                className="w-full border border-slate-300 rounded p-1.5 bg-white font-medium"
+              >
+                {standardPositions.map(p => (
+                  <option key={p.id} value={p.id}>{p.label}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="text-slate-500 block mb-1">Applied Load ({unit}):</label>
+              <input
+                type="number"
+                step="any"
+                required
+                value={testLoad}
+                onChange={(e) => setTestLoad(e.target.value)}
+                className="w-full border border-slate-300 rounded p-1.5 bg-white font-mono"
+              />
+            </div>
+
+            <div>
+              <label className="text-slate-500 block mb-1">Indication ({unit}):</label>
+              <input
+                type="number"
+                step="any"
+                required
+                autoFocus
+                value={indicationValue}
+                onChange={(e) => setIndicationValue(e.target.value)}
+                placeholder="e.g. 10.005"
+                className="w-full border border-slate-300 rounded p-1.5 bg-white font-mono"
+              />
+            </div>
+
+            <div>
+              <label className="text-slate-500 block mb-1">Changeover (&Delta;L, {unit}):</label>
+              <input
+                type="number"
+                step="any"
+                value={additionalLoad}
+                onChange={(e) => setAdditionalLoad(e.target.value)}
+                placeholder="Optional &Delta;L"
+                className="w-full border border-slate-300 rounded p-1.5 bg-white font-mono"
+              />
+            </div>
+
+            <div className="flex items-end">
+              <button
+                type="submit"
+                className="w-full inline-flex items-center justify-center gap-1.5 py-1.5 px-3 bg-blue-700 hover:bg-blue-800 text-white rounded font-semibold text-xs transition-colors"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Record Position</span>
+              </button>
+            </div>
+          </form>
         </div>
-
-        <form onSubmit={handleAddReading} className="grid grid-cols-1 md:grid-cols-5 gap-3 text-xs">
-          <div>
-            <label className="text-slate-500 block mb-1">Load Position:</label>
-            <select
-              value={position}
-              onChange={(e) => setPosition(e.target.value)}
-              className="w-full border border-slate-300 rounded p-1.5 bg-white font-medium"
-            >
-              {standardPositions.map(p => (
-                <option key={p.id} value={p.id}>{p.label}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="text-slate-500 block mb-1">Applied Load ({unit}):</label>
-            <input
-              type="number"
-              step="any"
-              required
-              value={testLoad}
-              onChange={(e) => setTestLoad(e.target.value)}
-              className="w-full border border-slate-300 rounded p-1.5 bg-white font-mono"
-            />
-          </div>
-
-          <div>
-            <label className="text-slate-500 block mb-1">Indication ({unit}):</label>
-            <input
-              type="number"
-              step="any"
-              required
-              autoFocus
-              value={indicationValue}
-              onChange={(e) => setIndicationValue(e.target.value)}
-              placeholder="e.g. 10.005"
-              className="w-full border border-slate-300 rounded p-1.5 bg-white font-mono"
-            />
-          </div>
-
-          <div>
-            <label className="text-slate-500 block mb-1">Changeover (&Delta;L, {unit}):</label>
-            <input
-              type="number"
-              step="any"
-              value={additionalLoad}
-              onChange={(e) => setAdditionalLoad(e.target.value)}
-              placeholder="Optional &Delta;L"
-              className="w-full border border-slate-300 rounded p-1.5 bg-white font-mono"
-            />
-          </div>
-
-          <div className="flex items-end">
-            <button
-              type="submit"
-              className="w-full inline-flex items-center justify-center gap-1.5 py-1.5 px-3 bg-blue-700 hover:bg-blue-800 text-white rounded font-semibold text-xs transition-colors"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Record Position</span>
-            </button>
-          </div>
-        </form>
-      </div>
+      )}
 
       {/* Observations & Positions Table */}
       <div className="bg-white border border-slate-200 rounded-lg shadow-xs overflow-hidden">
@@ -279,13 +284,13 @@ export const EccentricLoadingTest: React.FC<Props> = ({ sessionId, test, unit, m
               <th className="px-3 py-2.5">Corrected (Ec)</th>
               <th className="px-3 py-2.5">MPE Limit</th>
               <th className="px-3 py-2.5">Result</th>
-              <th className="px-3 py-2.5 text-right font-sans">Action</th>
+              {!readOnly && <th className="px-3 py-2.5 text-right font-sans">Action</th>}
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-200">
             {observations.length === 0 ? (
               <tr>
-                <td colSpan={9} className="px-4 py-8 text-center text-slate-400 font-sans">
+                <td colSpan={readOnly ? 8 : 9} className="px-4 py-8 text-center text-slate-400 font-sans">
                   No eccentric position observations recorded yet. Select position and record observation above.
                 </td>
               </tr>
@@ -322,16 +327,18 @@ export const EccentricLoadingTest: React.FC<Props> = ({ sessionId, test, unit, m
                         <span className="text-[11px] text-slate-400 italic font-normal">Pending calc</span>
                       )}
                     </td>
-                    <td className="px-3 py-2 text-right font-sans">
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteReading(obs.id)}
-                        className="p-1 text-slate-400 hover:text-red-700 transition-colors"
-                        title="Delete reading"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </td>
+                    {!readOnly && (
+                      <td className="px-3 py-2 text-right font-sans">
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteReading(obs.id)}
+                          className="p-1 text-slate-400 hover:text-red-700 transition-colors"
+                          title="Delete reading"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 );
               })
